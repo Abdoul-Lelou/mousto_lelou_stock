@@ -1,0 +1,25 @@
+@import "tailwindcss";
+
+/* Tu peux garder tes styles personnalisés en dessous si tu veux */
+body {
+  @apply bg-[#F8FAFC] text-slate-900;
+  margin: 0;
+}
+
+@media print {
+  /* Cacher tout sauf la section invoice */
+  body * {
+    visibility: hidden;
+  }
+  #invoice, #invoice * {
+    visibility: visible;
+  }
+  #invoice {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+  }
+}
+
+
