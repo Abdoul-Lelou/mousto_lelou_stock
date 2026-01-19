@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import type { Product } from '../types';
-import { ShoppingCart, Search, Trash2, Plus, Minus, CreditCard, CheckCircle2, Edit2 } from 'lucide-react';
+import { ShoppingCart, Search, Trash2, Plus, Minus, CreditCard, CheckCircle2, Edit2, Printer } from 'lucide-react';
 import { toast, Toaster } from 'sonner';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 interface CartItem extends Product {
   qty: number;
@@ -44,7 +46,6 @@ export const Sales = () => {
     }));
   };
 
-  // Modifier le prix unitaire d'un article spécifique dans le panier
   const updatePrice = (id: string) => {
     const item = cart.find(i => i.id === id);
     const newPrice = window.prompt(`Modifier le prix de "${item?.name}" (Ancien: ${item?.unit_price}):`, item?.unit_price.toString());
@@ -56,36 +57,59 @@ export const Sales = () => {
 
   const cartTotal = cart.reduce((acc, item) => acc + (item.unit_price * item.qty), 0);
 
-  const handleFinalCheckout = async () => {
-    setIsLoading(true);
-    try {
-      const salesData = cart.map(item => ({
-        product_id: item.id,
-        quantity: item.qty,
-        total_price: item.unit_price * item.qty,
-        seller_name: "Abdourahmane"
-      }));
-
-      const { error: saleError } = await supabase.from('sales').insert(salesData);
-      if (saleError) throw saleError;
-
-      for (const item of cart) {
-        await supabase.from('products')
-          .update({ quantity: item.quantity - item.qty })
-          .eq('id', item.id);
-      }
-
-      setLastSaleData({ items: [...cart], total: cartTotal });
-      toast.success("Vente validée avec succès !");
-      setCart([]);
-      setShowConfirmModal(false);
-      loadData();
-    } catch (e) {
-      toast.error("Erreur lors de la transaction");
-    } finally {
-      setIsLoading(false);
-    }
+  const generatePDF = (saleItems: CartItem[], total: number) => {
+    const doc = new jsPDF();
+    doc.setFontSize(18);
+    doc.text("MOUSTO_LELOU - REÇU DE VENTE", 14, 20);
+    doc.setFontSize(10);
+    doc.text(`Date: ${new Date().toLocaleString()}`, 14, 30);
+    
+    autoTable(doc, {
+      startY: 40,
+      head: [['Désignation', 'Qté', 'PU', 'Total']],
+      body: saleItems.map(i => [i.name, i.qty, `${i.unit_price.toLocaleString()} FG`, `${(i.qty * i.unit_price).toLocaleString()} FG`]),
+      foot: [['', '', 'TOTAL', `${total.toLocaleString()} FG`]],
+      theme: 'grid'
+    });
+    doc.save(`Recu_${Date.now()}.pdf`);
   };
+
+  // 1. Modifiez la fonction handleFinalCheckout pour enlever l'impression automatique
+const handleFinalCheckout = async () => {
+  setIsLoading(true);
+  try {
+    const currentCart = [...cart];
+    const currentTotal = cartTotal;
+    
+    const salesData = currentCart.map(item => ({
+      product_id: item.id,
+      quantity: item.qty,
+      total_price: item.unit_price * item.qty,
+      seller_name: "Abdourahmane"
+    }));
+
+    const { error: saleError } = await supabase.from('sales').insert(salesData);
+    if (saleError) throw saleError;
+
+    for (const item of currentCart) {
+      await supabase.from('products')
+        .update({ quantity: item.quantity - item.qty })
+        .eq('id', item.id);
+    }
+
+    // On stocke les données pour l'impression manuelle
+    setLastSaleData({ items: currentCart, total: currentTotal });
+    
+    toast.success("Vente enregistrée !");
+    setCart([]);
+    setShowConfirmModal(false); // On ferme le modal de confirmation
+    loadData();
+  } catch (e) {
+    toast.error("Erreur lors de la transaction");
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   const filteredProducts = products.filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase()));
 
@@ -146,6 +170,14 @@ export const Sales = () => {
                 <div className="h-full flex flex-col items-center justify-center text-slate-300 opacity-60">
                   <ShoppingCart size={48} className="mb-2" />
                   <p className="text-xs font-black uppercase tracking-widest">Votre panier est vide</p>
+                  {lastSaleData && (
+                    <button 
+                      onClick={() => generatePDF(lastSaleData.items, lastSaleData.total)}
+                      className="mt-4 flex items-center gap-2 px-4 py-2 bg-white border border-blue-200 text-blue-600 rounded-xl text-[10px] font-black uppercase hover:bg-blue-50 transition-all"
+                    >
+                      <Printer size={14} /> Réimprimer dernier reçu
+                    </button>
+                  )}
                 </div>
               ) : (
                 cart.map(item => (
@@ -189,7 +221,6 @@ export const Sales = () => {
         </div>
       </div>
 
-      {/* MODAL DE CONFIRMATION */}
       {showConfirmModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
           <div className="bg-white rounded-[2.5rem] w-full max-w-md shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
@@ -207,7 +238,7 @@ export const Sales = () => {
                   disabled={isLoading}
                   className="w-full py-4 bg-blue-600 text-white rounded-2xl font-black uppercase tracking-widest hover:bg-blue-700 transition-all shadow-lg shadow-blue-100"
                 >
-                  {isLoading ? "Veuillez patienter..." : "Confirmer et Imprimer"}
+                  {isLoading ? "Veuillez patienter..." : "Confirmer"}
                 </button>
                 <button 
                   onClick={() => setShowConfirmModal(false)}
