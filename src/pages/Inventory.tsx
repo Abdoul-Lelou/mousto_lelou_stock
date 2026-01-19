@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import type { Product } from '../types';
-import { Search, Plus, Edit2, Trash2, X, Filter, Download } from 'lucide-react';
+import { Search, Plus, Edit2, Trash2, X } from 'lucide-react';
 import { toast, Toaster } from 'sonner';
 
 export const Inventory = () => {
