@@ -1,6 +1,6 @@
 import React from 'react';
 import { Sidebar } from './Sidebar';
-import { Bell, Search, User, Menu } from 'lucide-react';
+import { Bell, User, Menu } from 'lucide-react';
 
 export const Shell = ({ children }: { children: React.ReactNode }) => {
   // Optionnel: Détecter la page actuelle pour un comportement spécifique

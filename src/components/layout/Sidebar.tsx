@@ -1,7 +1,6 @@
-import React from 'react';
 // 1. Importer Link et useLocation
 import { Link, useLocation } from 'react-router-dom'; 
-import { LayoutDashboard, Package, ShoppingCart, Users, Settings, LogOut, Box, PieChart } from 'lucide-react';
+import { LayoutDashboard, Package, ShoppingCart, LogOut, Box, PieChart } from 'lucide-react';
 
 const menuItems = [
   { icon: LayoutDashboard, label: 'Tableau de bord', path: '/' },
