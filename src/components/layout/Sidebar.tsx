@@ -1,5 +1,6 @@
-import { Link, useLocation } from 'react-router-dom'; 
-import { LayoutDashboard, Package, ShoppingCart, LogOut, Box, PieChart } from 'lucide-react';
+import { Link, useLocation } from 'react-router-dom';
+import { LayoutDashboard, Package, ShoppingCart, LogOut, Box, PieChart, Shield } from 'lucide-react';
+import { useAuth } from '../../contexts/AuthContext';
 
 const menuItems = [
   { icon: LayoutDashboard, label: 'Tableau de bord', path: '/' },
@@ -8,7 +9,6 @@ const menuItems = [
   { icon: PieChart, label: 'Rapports', path: '/reports' },
 ];
 
-// Typage des props pour accepter onClose (optionnel avec le ?)
 interface SidebarProps {
   onClose?: () => void;
 }
@@ -16,55 +16,82 @@ interface SidebarProps {
 export const Sidebar = ({ onClose }: SidebarProps) => {
   const location = useLocation();
   const currentPath = location.pathname;
+  const { signOut, role } = useAuth();
 
   return (
-    <div className="flex flex-col h-full text-slate-400 bg-slate-900">
-      {/* Brand / Logo */}
-      <div className="h-16 flex items-center px-6 border-b border-slate-800 bg-slate-950 shadow-sm">
-        <div className="flex items-center gap-3">
-          <div className="bg-blue-600 p-2 rounded-lg shadow-lg shadow-blue-900/50">
-            <Box size={20} className="text-white" />
+    <div className="flex flex-col h-full bg-[#0F172A] text-slate-300 relative overflow-hidden">
+      {/* Background Decor */}
+      <div className="absolute top-0 left-0 w-full h-64 bg-blue-600/10 rounded-b-[3rem] blur-3xl pointer-events-none"></div>
+
+      {/* Brand */}
+      <div className="h-24 flex items-center px-8 relative z-10">
+        <div className="flex items-center gap-4">
+          <div className="bg-gradient-to-br from-blue-500 to-indigo-600 p-3 rounded-2xl shadow-xl shadow-blue-500/20">
+            <Box size={24} className="text-white" />
           </div>
-          <span className="text-lg font-bold text-white tracking-tight">MOUSTO STOCK</span>
+          <div>
+            <h1 className="text-xl font-black text-white tracking-tighter leading-none">LELOU</h1>
+            <span className="text-[10px] font-bold text-blue-400 uppercase tracking-widest">Stock Manager</span>
+          </div>
         </div>
       </div>
 
-      {/* Menu de Navigation */}
-      <nav className="flex-1 px-4 py-6 space-y-1.5 overflow-y-auto">
-        <p className="px-4 text-[10px] font-bold uppercase tracking-widest text-slate-600 mb-2">
-          Menu Principal
-        </p>
-        
+      {/* Navigation */}
+      <nav className="flex-1 px-4 py-8 space-y-2 overflow-y-auto relative z-10 scrollbar-hide">
+        <div className="px-4 mb-4">
+          <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">Menu Principal</span>
+        </div>
+
         {menuItems.map((item) => {
           const isActive = currentPath === item.path;
           return (
-            <Link 
-              key={item.label} 
-              to={item.path} 
-              // Ferme la sidebar sur mobile quand on clique sur un lien
-              onClick={() => onClose?.()} 
-              className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 group ${
-                isActive 
-                ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' 
-                : 'hover:bg-slate-800 hover:text-slate-100'
-              }`}
+            <Link
+              key={item.label}
+              to={item.path}
+              onClick={() => onClose?.()}
+              className={`flex items-center gap-4 px-5 py-4 rounded-2xl text-sm font-bold transition-all duration-300 group relative overflow-hidden ${isActive
+                  ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/30 translate-x-1'
+                  : 'hover:bg-slate-800/50 hover:text-white'
+                }`}
             >
-              <item.icon size={18} className={`transition-colors ${isActive ? 'text-white' : 'text-slate-500 group-hover:text-white'}`} />
-              <span>{item.label}</span>
-              {isActive && (
-                <div className="ml-auto w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
-              )}
+              <item.icon size={20} className={`relative z-10 transition-transform duration-300 ${isActive ? 'scale-110' : 'group-hover:scale-110'}`} />
+              <span className="relative z-10">{item.label}</span>
+              {isActive && <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent"></div>}
             </Link>
           );
         })}
+
+        {role === 'admin' && (
+          <div className="pt-6">
+            <div className="px-4 mb-4">
+              <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">Système</span>
+            </div>
+            <Link
+              to="/admin"
+              onClick={() => onClose?.()}
+              className={`flex items-center gap-4 px-5 py-4 rounded-2xl text-sm font-bold transition-all duration-300 group ${currentPath === '/admin'
+                  ? 'bg-purple-600 text-white shadow-lg shadow-purple-900/30 translate-x-1'
+                  : 'hover:bg-slate-800/50 hover:text-white'
+                }`}
+            >
+              <Shield size={20} className="transition-transform group-hover:scale-110" />
+              <span>Administration</span>
+            </Link>
+          </div>
+        )}
       </nav>
 
-      {/* Pied de page / Déconnexion */}
-      <div className="p-4 border-t border-slate-800 bg-slate-900/50">
-        <button className="flex items-center justify-center gap-2 px-4 py-3 w-full text-red-400 hover:bg-red-950/30 hover:text-red-300 rounded-xl transition-all text-sm font-semibold border border-transparent hover:border-red-900/30">
-          <LogOut size={18} />
-          <span>Déconnexion</span>
-        </button>
+      {/* Footer / Logout */}
+      <div className="p-6 relative z-10">
+        <div className="p-4 rounded-3xl bg-slate-800/50 border border-slate-700/50 backdrop-blur-sm">
+          <button
+            onClick={() => signOut()}
+            className="flex items-center justify-center gap-3 w-full py-3 bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 rounded-xl transition-all text-xs font-bold uppercase tracking-wider group"
+          >
+            <LogOut size={16} className="group-hover:-translate-x-1 transition-transform" />
+            <span>Déconnexion</span>
+          </button>
+        </div>
       </div>
     </div>
   );
