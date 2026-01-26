@@ -4,7 +4,7 @@ import type { Product } from '../types/index';
 import { AlertTriangle, Package, TrendingUp, DollarSign, Activity, ChevronRight } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, AreaChart, Area } from 'recharts';
 import { Link } from 'react-router-dom';
-import { toast, Toaster } from 'sonner';
+import { Toaster } from 'sonner';
 
 export const Dashboard = () => {
   const [products, setProducts] = useState<Product[]>([]);
