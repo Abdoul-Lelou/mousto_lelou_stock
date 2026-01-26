@@ -1,89 +1,130 @@
-    # Schéma de Base de Données - Mousto Lelou Stock
+# Schéma de Base de Données - MOUSTO_LELOU Stock
 
-    Basé sur les définitions TypeScript du projet (`src/types/index.tsx`), voici la structure de la base de données Supabase.
+Ce document détaille la structure de la base de données PostgreSQL hébergée sur Supabase pour l'ERP MOUSTO_LELOU.
 
-    ## 📊 Diagramme Relationnel (ERD)
+## 📊 Diagramme Relationnel (ERD)
 
-    ```mermaid
-    erDiagram
-        PROFILES {
-            uuid id PK
-            string role "admin | vendeur"
-            string full_name
-        }
+```mermaid
+erDiagram
+    profiles ||--o{ sales : "enregistre"
+    profiles ||--o{ stock_movements : "effectue"
+    profiles ||--o{ notifications : "reçoit"
+    categories ||--o{ products : "catégorise"
+    products ||--o{ sales : "fait l'objet de"
+    products ||--o{ stock_movements : "mouvemente"
 
-        CATEGORIES {
-            uuid id PK
-            string name
-        }
+    profiles {
+        uuid id PK
+        text firstname
+        text lastname
+        text role "admin | vendeur"
+        boolean is_active "Verrou de sécurité"
+    }
 
-        PRODUCTS {
-            uuid id PK
-            string name
-            uuid category_id FK
-            int quantity
-            int min_threshold
-            float unit_price
-            string sku
-            string image_url
-            timestamp created_at
-        }
+    products {
+        uuid id PK
+        text name "Unique"
+        uuid category_id FK
+        integer quantity
+        integer min_threshold
+        integer unit_price
+        text sku
+    }
 
-        STOCK_MOVEMENTS {
-            uuid id PK
-            uuid product_id FK
-            string type "in | out"
-            int quantity
-            string reason
-            timestamp created_at
-        }
+    sales {
+        uuid id PK
+        uuid product_id FK
+        integer quantity
+        integer total_price
+        text seller_name
+        uuid created_by FK
+        timestamp created_at
+    }
 
-        PRODUCTS }|--|| CATEGORIES : "appartient à"
-        STOCK_MOVEMENTS }|--|| PRODUCTS : "concerne"
-    ```
+    stock_movements {
+        uuid id PK
+        uuid product_id FK
+        text type "in | out"
+        integer quantity
+        text reason "Vente, Réappro, etc."
+        uuid created_by FK
+        timestamp created_at
+    }
 
-    ## 📝 Détails des Tables
+    notifications {
+        uuid id PK
+        uuid user_id FK
+        text title
+        text message
+        text type "low_stock | sale..."
+        boolean is_read
+        timestamp created_at
+    }
+```
 
-    ### 1. `profiles`
-    Stocke les informations supplémentaires des utilisateurs (liée à la table `auth.users` de Supabase).
+## 📝 Détails des Tables
 
-    | Colonne | Type | Description |
-    | :--- | :--- | :--- |
-    | `id` | UUID | Clé primaire (correspond à `auth.users.id`) |
-    | `role` | Text | Rôle de l'utilisateur (`admin` ou `vendeur`) |
-    | `full_name` | Text | Nom complet de l'utilisateur |
+### 1. `profiles`
+Données étendues des utilisateurs liées à `auth.users`.
 
-    ### 2. `products`
-    Table centrale contenant l'inventaire.
+| Colonne | Type | Description |
+| :--- | :--- | :--- |
+| `id` | UUID | Clé primaire (lié à `auth.users.id`) |
+| `firstname` | Text | Prénom |
+| `lastname` | Text | Nom |
+| `role` | Text | Rôle système (`admin` ou `vendeur`) |
+| `is_active` | Boolean | État du compte (True = Actif, False = Suspendu) |
 
-    | Colonne | Type | Description |
-    | :--- | :--- | :--- |
-    | `id` | UUID | Identifiant unique du produit |
-    | `name` | Text | Nom du produit |
-    | `category_id` | UUID | Référence vers la table `categories` |
-    | `quantity` | Integer | Stock actuel |
-    | `min_threshold` | Integer | Seuil d'alerte pour stock critique |
-    | `unit_price` | Numeric | Prix unitaire (FG) |
-    | `sku` | Text | Code de référence unique (optionnel) |
-    | `image_url` | Text | Lien vers l'image du produit (optionnel) |
-    | `created_at` | Timestamp | Date de création |
+### 2. `products`
+Catalogue central des articles en stock.
 
-    ### 3. `categories`
-    Catégories de produits (ex: Carreaux, Sanitaires).
+| Colonne | Type | Description |
+| :--- | :--- | :--- |
+| `id` | UUID | Identifiant unique |
+| `name` | Text | Nom de l'article (Unique) |
+| `category_id` | UUID | Référence à `categories.id` |
+| `quantity` | Integer | Stock physique actuel |
+| `min_threshold` | Integer | Seuil de stock critique pour alertes |
+| `unit_price` | Integer | Prix de vente unitaire (FG) |
+| `sku` | Text | Référence interne (optionnelle) |
 
-    | Colonne | Type | Description |
-    | :--- | :--- | :--- |
-    | `id` | UUID | Identifiant unique |
-    | `name` | Text | Nom de la catégorie |
+### 3. `sales`
+Journal des transactions de vente financières.
 
-    ### 4. `stock_movements`
-    Historique des entrées et sorties de stock.
+| Colonne | Type | Description |
+| :--- | :--- | :--- |
+| `id` | UUID | Identifiant de transaction |
+| `product_id` | UUID | Produit vendu |
+| `quantity` | Integer | Quantité vendue |
+| `total_price` | Integer | Montant total encaissé |
+| `seller_name` | Text | Nom affiché du vendeur |
+| `created_by` | UUID | ID du profil ayant effectué la vente |
 
-    | Colonne | Type | Description |
-    | :--- | :--- | :--- |
-    | `id` | UUID | Identifiant du mouvement |
-    | `product_id` | UUID | Produit concerné |
-    | `type` | Text | Type de mouvement (`in` pour entrée, `out` pour sortie) |
-    | `quantity` | Integer | Quantité déplacée |
-    | `reason` | Text | Motif (ex: "Vente", "Réapprovisionnement", "Perte") |
-    | `created_at` | Timestamp | Date du mouvement |
+### 4. `stock_movements`
+Journal d'audit complet des flux (Entrées / Sorties).
+
+| Colonne | Type | Description |
+| :--- | :--- | :--- |
+| `id` | UUID | Identifiant unique |
+| `product_id` | UUID | Produit concerné |
+| `type` | Text | `in` (Entrée) ou `out` (Sortie) |
+| `quantity` | Integer | Volume du mouvement |
+| `reason` | Text | Libellé (ex: "Vente Validée", "Réappro") |
+| `created_by` | UUID | Agent responsable du flux |
+
+### 5. `notifications`
+Système d'alertes en temps réel.
+
+| Colonne | Type | Description |
+| :--- | :--- | :--- |
+| `id` | UUID | Identifiant unique |
+| `user_id` | UUID | Destinataire de l'alerte |
+| `title` | Text | Titre de la notification |
+| `message` | Text | Détails de l'alerte |
+| `type` | Text | Catégorie (`low_stock`, `sale`, `info`, `warning`) |
+| `is_read` | Boolean | État de lecture |
+
+---
+
+### 📡 Divers
+Une table technique `wifi_users` est utilisée pour la gestion des métadonnées de connexion des points d'accès.

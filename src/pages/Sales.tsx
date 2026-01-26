@@ -168,7 +168,7 @@ export const Sales = () => {
       setShowConfirmModal(false);
       setShowSuccessModal(true);
       loadData();
-    } catch (e) {
+    } catch {
       toast.error("Erreur lors de la transaction");
     } finally {
       setIsLoading(false);

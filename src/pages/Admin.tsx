@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { type UserRole, type Profile } from '../types';
-import { Shield, UserPlus, Users, Loader2, CheckCircle, X, Ban } from 'lucide-react';
+import { Shield, UserPlus, Users, Loader2, CheckCircle, X, Ban, Trash2 } from 'lucide-react';
 import { toast, Toaster } from 'sonner';
 
 export const Admin = () => {
@@ -29,7 +29,7 @@ export const Admin = () => {
         try {
             const { data } = await supabase.from('profiles').select('*').order('firstname', { ascending: true });
             if (data) setUsers(data as Profile[]);
-        } catch (err) {
+        } catch {
             toast.error("Erreur chargement utilisateurs");
         } finally {
             setLoading(false);
@@ -112,6 +112,26 @@ export const Admin = () => {
         }
     };
 
+    const handleDeleteUser = async (userId: string) => {
+        if (userId === session?.user?.id) {
+            toast.error("Impossible de supprimer votre propre compte");
+            return;
+        }
+
+        if (!window.confirm('Supprimer définitivement ce compte ?')) return;
+
+        try {
+            const { error } = await supabase.from('profiles').delete().eq('id', userId);
+            if (error) throw error;
+
+            toast.success("Compte supprimé avec succès");
+            fetchUsers();
+        } catch (error: any) {
+            console.error('Delete user error:', error);
+            toast.error("Échec de la suppression", { description: error.message });
+        }
+    };
+
     return (
         <div className="max-w-7xl mx-auto px-4 md:px-8 pb-12 pt-6 space-y-8 animate-in fade-in duration-500">
             <Toaster position="top-right" richColors />
@@ -173,13 +193,22 @@ export const Admin = () => {
                                         </td>
                                         <td className="px-8 py-4 text-center">
                                             {u.id !== session?.user?.id ? (
-                                                <button
-                                                    onClick={() => handleToggleUserStatus(u.id, u.is_active)}
-                                                    disabled={togglingId === u.id}
-                                                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 mx-auto min-w-[120px] justify-center ${u.is_active ? 'bg-red-50 text-red-600 hover:bg-red-100' : 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100'} ${togglingId === u.id ? 'opacity-50 cursor-wait' : 'cursor-pointer hover:scale-105'}`}
-                                                >
-                                                    {togglingId === u.id ? <Loader2 className="animate-spin" size={14} /> : (u.is_active ? <><Ban size={14} /> Désactiver</> : <><CheckCircle size={14} /> Activer</>)}
-                                                </button>
+                                                <div className="flex items-center gap-2 justify-center">
+                                                    <button
+                                                        onClick={() => handleToggleUserStatus(u.id, u.is_active)}
+                                                        disabled={togglingId === u.id}
+                                                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 min-w-[120px] justify-center ${u.is_active ? 'bg-red-50 text-red-600 hover:bg-red-100' : 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100'} ${togglingId === u.id ? 'opacity-50 cursor-wait' : 'cursor-pointer hover:scale-105'}`}
+                                                    >
+                                                        {togglingId === u.id ? <Loader2 className="animate-spin" size={14} /> : (u.is_active ? <><Ban size={14} /> Désactiver</> : <><CheckCircle size={14} /> Activer</>)}
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleDeleteUser(u.id)}
+                                                        className="p-1.5 bg-red-50 text-red-600 rounded-lg hover:bg-red-600 hover:text-white transition-all shadow-sm"
+                                                        title="Supprimer définitivement"
+                                                    >
+                                                        <Trash2 size={16} />
+                                                    </button>
+                                                </div>
                                             ) : (
                                                 <span className="text-xs text-slate-300 font-medium">—</span>
                                             )}

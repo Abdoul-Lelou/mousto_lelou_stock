@@ -1,17 +1,19 @@
 # 🛠️ MOUSTO_LELOU - ERP de Gestion de Quincaillerie
 
-Solution Full-Stack sécurisée pour le suivi de stock et l'analyse décisionnelle.
+Solution Full-Stack sécurisée (React/Supabase) pour le suivi de stock et l'analyse décisionnelle.
 
-## 🚀 Fonctionnalités
--   **Gestion de Stock Real-time** : Flux d'entrées/sorties avec alertes et feedback sonore.
--   **Synthèse Analytique** : Module BI pour l'inventaire automatique par produit.
--   **Sécurité Avancée** : RLS PostgreSQL avec fonctions Security Definer pour éviter les récursions et protéger les données.
--   **Contrôle d'Accès** : Gestion admin complète avec désactivation instantanée des comptes.
+## 🚀 Points Forts
+-   **Gestion CRUD complète** : Administration totale des utilisateurs (Activer/Désactiver/Supprimer).
+-   **Synthèse Analytique** : Calculateur de flux entrées/sorties par produit intégré (Module BI).
+-   **Sécurité RLS Avancée** : Protection rigoureuse via des fonctions `Security Definer` pour éviter les récursions SQL (Fix 42P17).
+-   **Real-time UX** : Notifications sonores et visuelles synchronisées pour une réactivité maximale.
 
-## 🛠️ Stack
--   **React 18**, **Supabase (PostgreSQL)**, **Tailwind CSS**, **Framer Motion**.
+## 🛠️ Stack Technologie
+-   **Frontend** : React 18, Tailwind CSS, Framer Motion.
+-   **Backend** : Supabase (Auth, DB Realtime, Edge Functions).
+-   **Reporting** : Recharts & jsPDF.
 
 ## 🧠 Expertise Technique
--   **Résolution d'erreurs de récursion infinie (42P17)** via optimisation SQL et fonctions sécurisées.
--   **Gestion rigoureuse du cycle de vie des composants** (Nettoyage systématique des canaux Realtime).
--   **Authentification Robuste** : Verrouillage multi-niveau pour les comptes désactivés.
+-   **Résolution Critique** : Correction définitive de l'erreur d'infinité récursive SQL.
+-   **Optimisation Realtime** : Gestion performante des abonnements aux canaux PostgreSQL.
+-   **Sécurité Multi-niveau** : Verrou de session côté client couplé aux politiques de base de données.

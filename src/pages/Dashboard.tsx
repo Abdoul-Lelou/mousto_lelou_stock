@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import type { Product } from '../types/index';
 import { AlertTriangle, Package, TrendingUp, DollarSign, Activity, ChevronRight, Plus, X } from 'lucide-react';
@@ -198,8 +198,18 @@ export const Dashboard = () => {
   );
 };
 
-const KpiCard = ({ icon, label, value, sub, trend, isNegative, theme }: any) => {
-  const colors: any = {
+interface KpiCardProps {
+  icon: React.ReactNode;
+  label: string;
+  value: string | number;
+  sub?: string;
+  trend?: string;
+  isNegative?: boolean;
+  theme: 'blue' | 'orange' | 'red' | 'emerald';
+}
+
+const KpiCard = ({ icon, label, value, sub, trend, isNegative, theme }: KpiCardProps) => {
+  const colors: Record<string, string> = {
     blue: "bg-blue-50 text-blue-600 border-blue-100",
     orange: "bg-orange-50 text-orange-600 border-orange-100",
     red: "bg-red-50 text-red-600 border-red-100",

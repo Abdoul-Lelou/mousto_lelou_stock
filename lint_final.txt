@@ -1,0 +1,55 @@
+
+> lelou-stock@0.0.0 lint
+> eslint .
+
+
+/home/abdourahmane/Bureau/gestion_stock/lelou-stock/src/components/AuditJournal.tsx
+  51:8   warning  React Hook useEffect has a missing dependency: 'fetchInitialData'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  61:25  error    Unexpected any. Specify a different type                                                                             @typescript-eslint/no-explicit-any
+  93:75  error    Unexpected any. Specify a different type                                                                             @typescript-eslint/no-explicit-any
+
+/home/abdourahmane/Bureau/gestion_stock/lelou-stock/src/contexts/AuthContext.tsx
+   61:8   warning  React Hook useEffect has a missing dependency: 'fetchProfile'. Either include it or remove the dependency array                 react-hooks/exhaustive-deps
+  115:14  error    Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+/home/abdourahmane/Bureau/gestion_stock/lelou-stock/src/contexts/useNotifications.tsx
+   19:78  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   98:26  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  113:26  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/abdourahmane/Bureau/gestion_stock/lelou-stock/src/pages/Admin.tsx
+   73:23  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  104:25  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/abdourahmane/Bureau/gestion_stock/lelou-stock/src/pages/Dashboard.tsx
+  63:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/abdourahmane/Bureau/gestion_stock/lelou-stock/src/pages/Inventory.tsx
+  135:21  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  174:21  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/abdourahmane/Bureau/gestion_stock/lelou-stock/src/pages/Profile.tsx
+  26:23  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/abdourahmane/Bureau/gestion_stock/lelou-stock/src/pages/Reports.tsx
+   35:38  warning  React Hook useEffect has a missing dependency: 'fetchSales'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+   63:59  error    Unexpected any. Specify a different type                                                                       @typescript-eslint/no-explicit-any
+  154:32  error    Unexpected any. Specify a different type                                                                       @typescript-eslint/no-explicit-any
+  234:56  error    Unexpected any. Specify a different type                                                                       @typescript-eslint/no-explicit-any
+
+/home/abdourahmane/Bureau/gestion_stock/lelou-stock/supabase/functions/create-user/index.ts
+   1:1   error  Use "@ts-expect-error" instead of "@ts-ignore", as "@ts-ignore" will do nothing if the following line is error-free  @typescript-eslint/ban-ts-comment
+   9:1   error  Use "@ts-expect-error" instead of "@ts-ignore", as "@ts-ignore" will do nothing if the following line is error-free  @typescript-eslint/ban-ts-comment
+  19:13  error  Use "@ts-expect-error" instead of "@ts-ignore", as "@ts-ignore" will do nothing if the following line is error-free  @typescript-eslint/ban-ts-comment
+  21:13  error  Use "@ts-expect-error" instead of "@ts-ignore", as "@ts-ignore" will do nothing if the following line is error-free  @typescript-eslint/ban-ts-comment
+  81:21  error  Unexpected any. Specify a different type                                                                             @typescript-eslint/no-explicit-any
+
+/home/abdourahmane/Bureau/gestion_stock/lelou-stock/supabase/functions/toggle-user-status/index.ts
+   1:1   error  Use "@ts-expect-error" instead of "@ts-ignore", as "@ts-ignore" will do nothing if the following line is error-free  @typescript-eslint/ban-ts-comment
+   9:1   error  Use "@ts-expect-error" instead of "@ts-ignore", as "@ts-ignore" will do nothing if the following line is error-free  @typescript-eslint/ban-ts-comment
+  19:13  error  Use "@ts-expect-error" instead of "@ts-ignore", as "@ts-ignore" will do nothing if the following line is error-free  @typescript-eslint/ban-ts-comment
+  21:13  error  Use "@ts-expect-error" instead of "@ts-ignore", as "@ts-ignore" will do nothing if the following line is error-free  @typescript-eslint/ban-ts-comment
+  78:21  error  Unexpected any. Specify a different type                                                                             @typescript-eslint/no-explicit-any
+
+✖ 28 problems (25 errors, 3 warnings)
+

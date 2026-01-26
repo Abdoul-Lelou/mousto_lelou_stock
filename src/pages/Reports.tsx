@@ -174,7 +174,7 @@ export const Reports = () => {
       }
 
       setProductSummaries(summaries.sort((a, b) => b.totalValue - a.totalValue));
-    } catch (err) {
+    } catch {
       toast.error("Erreur calcul synthèse");
     } finally {
       setLoadingSynthesis(false);

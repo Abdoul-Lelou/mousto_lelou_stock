@@ -154,9 +154,8 @@ export const AuditJournal = () => {
             });
         }
 
-        // Sorting
         result.sort((a, b) => {
-            let valA: any, valB: any;
+            let valA = 0, valB = 0;
 
             if (sortField === 'date') {
                 valA = new Date(a.created_at).getTime();
