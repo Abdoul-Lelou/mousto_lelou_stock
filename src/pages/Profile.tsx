@@ -34,8 +34,8 @@ export const ProfilePage = () => {
         <div className="max-w-4xl mx-auto px-4 py-8 space-y-8 animate-in fade-in duration-500">
 
             <div className="flex flex-col gap-2">
-                <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">Mon Profil</h1>
-                <p className="text-slate-500">Gérez vos informations personnelles et votre sécurité.</p>
+                <h1 className="text-3xl font-black text-slate-900 uppercase tracking-tight">Mon Profil</h1>
+                <p className="text-slate-500 text-sm font-medium italic">Gérez vos informations personnelles et votre sécurité.</p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -58,8 +58,8 @@ export const ProfilePage = () => {
 
                     {/* General Info Readonly */}
                     <div className="bg-white p-8 rounded-[2rem] border border-slate-200 shadow-sm">
-                        <h3 className="flex items-center gap-2 text-lg font-bold text-slate-800 mb-6">
-                            <User className="text-blue-500" size={20} /> Informations
+                        <h3 className="flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-widest mb-8">
+                            <User className="text-blue-500" size={18} /> Informations Personnelles
                         </h3>
                         <div className="space-y-4">
                             <div>
@@ -85,8 +85,8 @@ export const ProfilePage = () => {
 
                     {/* Password Change */}
                     <div className="bg-white p-8 rounded-[2rem] border border-slate-200 shadow-sm">
-                        <h3 className="flex items-center gap-2 text-lg font-bold text-slate-800 mb-6">
-                            <Key className="text-orange-500" size={20} /> Sécurité
+                        <h3 className="flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-widest mb-8">
+                            <Key className="text-orange-500" size={18} /> Sécurité du Compte
                         </h3>
                         <form onSubmit={handleUpdatePassword} className="space-y-4">
                             <div>
@@ -100,11 +100,11 @@ export const ProfilePage = () => {
                                     minLength={6}
                                 />
                             </div>
-                            <div className="flex justify-end">
+                            <div className="flex justify-end pt-4">
                                 <button
                                     type="submit"
                                     disabled={loading || !newPassword}
-                                    className="bg-slate-900 text-white px-6 py-3 rounded-xl font-bold hover:bg-black transition-all flex items-center gap-2 disabled:opacity-50"
+                                    className="w-full md:w-auto bg-slate-900 text-white px-10 py-4 rounded-[1.5rem] font-black uppercase text-[10px] tracking-widest shadow-xl shadow-slate-200 hover:bg-black transition-all flex items-center justify-center gap-2 disabled:opacity-50 active:scale-95"
                                 >
                                     {loading ? <Loader2 className="animate-spin" size={18} /> : "Mettre à jour le mot de passe"}
                                 </button>

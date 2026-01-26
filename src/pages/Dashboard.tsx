@@ -97,7 +97,7 @@ export const Dashboard = () => {
           </div>
           <button
             onClick={() => setIsModalOpen(true)}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl font-bold flex items-center gap-2 shadow-lg shadow-blue-200 transition-all text-sm"
+            className="bg-slate-900 hover:bg-slate-800 text-white px-6 py-3 rounded-xl font-black flex items-center gap-2 shadow-lg shadow-slate-200 transition-all text-[10px] uppercase tracking-widest"
           >
             <Plus size={18} /> Ajouter
           </button>
@@ -121,8 +121,8 @@ export const Dashboard = () => {
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-        <div className="xl:col-span-2 bg-white p-6 rounded-3xl border border-slate-200 shadow-sm">
-          <h3 className="font-bold text-slate-800 mb-6">Volume de Stock (Top 10)</h3>
+        <div className="xl:col-span-2 bg-white p-6 rounded-[2rem] border border-slate-200 shadow-sm">
+          <h3 className="font-bold text-slate-800 mb-6 uppercase text-xs tracking-widest text-slate-400">Volume de Stock (Top 10)</h3>
           <div className="h-[350px]">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={products.sort((a, b) => b.quantity - a.quantity).slice(0, 10)} barSize={40}>
@@ -141,9 +141,9 @@ export const Dashboard = () => {
         </div>
 
         {/* Alerts Panel */}
-        <div className="bg-white rounded-3xl border border-slate-200 shadow-sm flex flex-col h-full overflow-hidden">
+        <div className="bg-white rounded-[2rem] border border-slate-200 shadow-sm flex flex-col h-full overflow-hidden">
           <div className="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
-            <h3 className="font-bold text-slate-800 flex items-center gap-2">
+            <h3 className="font-black text-slate-800 flex items-center gap-2 uppercase text-xs tracking-widest text-slate-400">
               <AlertTriangle size={18} className="text-orange-500" /> Priorités
             </h3>
             <span className="px-2.5 py-1 rounded-full bg-orange-100 text-orange-700 text-xs font-bold">{criticalProducts.length}</span>
@@ -206,7 +206,7 @@ const KpiCard = ({ icon, label, value, sub, trend, isNegative, theme }: any) => 
     emerald: "bg-emerald-50 text-emerald-600 border-emerald-100"
   };
   return (
-    <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm hover:shadow-xl transition-all duration-300 group">
+    <div className="bg-white p-6 rounded-[2rem] border border-slate-200 shadow-sm hover:shadow-xl transition-all duration-300 group">
       <div className="flex justify-between items-start mb-4">
         <div className={`p-3 rounded-2xl border ${colors[theme]} group-hover:scale-110 transition-transform`}>{icon}</div>
         {trend && <span className={`text-[10px] font-black px-2 py-1 rounded-lg uppercase ${isNegative ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>{trend}</span>}

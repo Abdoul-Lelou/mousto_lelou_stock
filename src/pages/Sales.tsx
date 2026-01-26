@@ -20,6 +20,7 @@ export const Sales = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [lastSaleData, setLastSaleData] = useState<{ items: CartItem[], total: number, transactionId: string } | null>(null);
 
   useEffect(() => { loadData(); }, []);
@@ -96,7 +97,7 @@ export const Sales = () => {
     const pageHeight = doc.internal.pageSize.height;
     doc.setFontSize(8);
     doc.setTextColor(150);
-    doc.text("Document généré par le système - MOUSTO_LELOU", 105, pageHeight - 10, { align: 'center' });
+    doc.text("Document généré par le Manager - MOUSTO_LELOU", 105, pageHeight - 10, { align: 'center' });
 
     doc.save(`Recu_${transactionId.substring(0, 8).toUpperCase()}.pdf`);
   };
@@ -163,11 +164,9 @@ export const Sales = () => {
         transactionId: realTransactionId
       });
 
-      generatePDF(currentCart, currentTotal, realTransactionId);
-
-      toast.success("Vente enregistrée !");
       setCart([]);
       setShowConfirmModal(false);
+      setShowSuccessModal(true);
       loadData();
     } catch (e) {
       toast.error("Erreur lors de la transaction");
@@ -184,8 +183,8 @@ export const Sales = () => {
 
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <h1 className="text-3xl font-black text-slate-900 uppercase tracking-tight">Caisse</h1>
-        <div className="px-4 py-2 bg-blue-50 text-blue-600 rounded-xl font-bold text-xs uppercase tracking-widest">
-          Connecté: {profile?.firstname} {profile?.lastname}
+        <div className="px-4 py-2 bg-slate-900 text-white rounded-xl font-black text-[10px] uppercase tracking-widest shadow-lg shadow-slate-200">
+          Vendeur: {profile?.firstname} {profile?.lastname}
         </div>
       </div>
 
@@ -226,7 +225,7 @@ export const Sales = () => {
         <div className="w-full lg:w-[400px] flex flex-col h-[650px]">
           <div className="flex-1 bg-white rounded-[2rem] border border-slate-200 shadow-xl flex flex-col overflow-hidden">
             <div className="p-5 border-b border-slate-100 bg-slate-900 text-white flex justify-between items-center">
-              <h2 className="font-bold flex items-center gap-2 uppercase text-xs tracking-widest">
+              <h2 className="font-black flex items-center gap-2 uppercase text-[10px] tracking-widest">
                 <ShoppingCart size={18} className="text-blue-400" /> Panier Actuel
               </h2>
               <span className="bg-blue-600 px-2 py-1 rounded-lg text-[10px] font-mono">{cart.length} Articles</span>
@@ -248,20 +247,20 @@ export const Sales = () => {
                 </div>
               ) : (
                 cart.map(item => (
-                  <div key={item.id} className="bg-white p-3 rounded-xl border border-slate-200 shadow-sm flex justify-between items-center group">
-                    <div className="flex-1 min-w-0 pr-2">
-                      <p className="text-sm font-bold text-slate-800 truncate">{item.name}</p>
+                  <div key={item.id} className="bg-white h-16 px-4 rounded-xl border border-slate-200 shadow-sm flex justify-between items-center group overflow-hidden">
+                    <div className="flex-1 min-w-0 pr-2 flex flex-col justify-center">
+                      <p className="text-sm font-bold text-slate-800 truncate" title={item.name}>{item.name}</p>
                       <button
                         onClick={() => openPriceModal(item.id, item.unit_price)}
-                        className="flex items-center gap-1 text-[10px] text-blue-600 font-mono font-bold hover:bg-blue-50 px-1 rounded transition-colors"
+                        className="flex items-center gap-1 text-[10px] text-blue-600 font-mono font-bold hover:bg-blue-50 px-1 rounded transition-colors w-fit"
                       >
                         <Edit2 size={10} /> {item.unit_price.toLocaleString()} FG
                       </button>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <div className="flex items-center bg-slate-100 rounded-lg p-1">
+                    <div className="flex items-center gap-3 flex-shrink-0">
+                      <div className="flex items-center bg-slate-100 rounded-lg p-1 h-9">
                         <button onClick={() => updateQty(item.id, -1)} className="p-1 hover:bg-white rounded transition-all"><Minus size={12} /></button>
-                        <span className="w-6 text-center text-xs font-black font-mono">{item.qty}</span>
+                        <span className="w-8 text-center text-xs font-black font-mono">{item.qty}</span>
                         <button onClick={() => updateQty(item.id, 1)} className="p-1 hover:bg-white rounded transition-all"><Plus size={12} /></button>
                       </div>
                       <button onClick={() => setCart(cart.filter(c => c.id !== item.id))} className="text-slate-300 hover:text-red-500 transition-colors p-1"><Trash2 size={16} /></button>
@@ -312,6 +311,41 @@ export const Sales = () => {
                   className="w-full py-3 text-slate-400 font-bold hover:text-slate-600 transition-colors"
                 >
                   Retour
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL SUCCÈS - IMPRESSION OPTIONNELLE */}
+      {showSuccessModal && lastSaleData && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md">
+          <div className="bg-white rounded-[2.5rem] w-full max-w-md shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="p-8 text-center">
+              <div className="w-20 h-20 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                <CheckCircle2 size={40} />
+              </div>
+              <h3 className="text-xl font-black text-slate-900 uppercase">Vente Réussie !</h3>
+              <p className="text-slate-500 mt-2 text-sm font-medium">La transaction a été enregistrée avec succès.</p>
+
+              <div className="bg-slate-50 rounded-2xl p-4 my-6">
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Montant Encaissé</p>
+                <p className="text-2xl font-mono font-black text-slate-900">{lastSaleData.total.toLocaleString()} FG</p>
+              </div>
+
+              <div className="space-y-3">
+                <button
+                  onClick={() => generatePDF(lastSaleData.items, lastSaleData.total, lastSaleData.transactionId)}
+                  className="w-full py-4 bg-blue-600 text-white rounded-2xl font-black uppercase tracking-widest hover:bg-blue-700 transition-all flex items-center justify-center gap-2 shadow-lg shadow-blue-100 active:scale-95"
+                >
+                  <Printer size={20} /> Imprimer le reçu (Optionnel)
+                </button>
+                <button
+                  onClick={() => setShowSuccessModal(false)}
+                  className="w-full py-4 bg-slate-100 text-slate-600 rounded-2xl font-black uppercase tracking-widest hover:bg-slate-200 transition-all active:scale-95"
+                >
+                  Fermer & Nouvelle vente
                 </button>
               </div>
             </div>

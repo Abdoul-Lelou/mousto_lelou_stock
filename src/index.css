@@ -6,6 +6,23 @@ body {
   margin: 0;
 }
 
+/* Harmonisation des interactions */
+button, 
+a, 
+select, 
+input[type="button"], 
+input[type="submit"],
+[role="button"] {
+  cursor: pointer !important;
+  @apply transition-all duration-200 active:scale-95;
+}
+
+/* Lignes de tableau cliquables (comme dans le Journal d'Audit) */
+tr[onClick], 
+tr.cursor-pointer {
+  cursor: pointer !important;
+}
+
 @media print {
   /* Cacher tout sauf la section invoice */
   body * {

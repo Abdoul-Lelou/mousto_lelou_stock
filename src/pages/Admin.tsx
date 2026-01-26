@@ -47,30 +47,20 @@ export const Admin = () => {
         setCreating(true);
 
         try {
-            const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-user`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${session?.access_token}`,
-                    'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY
-                },
-                body: JSON.stringify({
+            const { error } = await supabase.functions.invoke('create-user', {
+                body: {
                     email: newUserEmail,
                     password: newUserPassword,
                     role: newUserRole,
                     firstname: newUserFirstName,
                     lastname: newUserLastName
-                })
+                },
+                headers: {
+                    Authorization: `Bearer ${session.access_token}`
+                }
             });
 
-            if (response.status === 401) {
-                throw new Error("Session expirée ou droits insuffisants");
-            }
-
-            const data = await response.json();
-            if (!response.ok) {
-                throw new Error(data?.error || `Erreur ${response.status}`);
-            }
+            if (error) throw error;
 
             toast.success("Utilisateur créé avec succès !");
             setIsModalOpen(false);
@@ -88,6 +78,11 @@ export const Admin = () => {
     };
 
     const handleToggleUserStatus = async (userId: string, currentlyActive: boolean) => {
+        if (!session?.access_token) {
+            toast.error("Session expirée. Veuillez vous reconnecter.");
+            return;
+        }
+
         if (userId === session?.user?.id) {
             toast.error("Impossible de modifier votre propre compte");
             return;
@@ -96,29 +91,22 @@ export const Admin = () => {
         setTogglingId(userId);
 
         try {
-            const action = currentlyActive ? 'disable' : 'enable';
-            const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/toggle-user-status`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${session?.access_token}`,
-                    'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY
-                },
-                body: JSON.stringify({ userId, action })
-            });
+            // Mise à jour directe de la table profiles
+            const { error: profileError } = await supabase
+                .from('profiles')
+                .update({ is_active: !currentlyActive })
+                .eq('id', userId);
 
-            if (response.status === 401) {
-                toast.error("Session expirée ou droits insuffisants");
-                return;
-            }
+            if (profileError) throw profileError;
 
-            const data = await response.json();
-            if (!response.ok) throw new Error(data.error || "Erreur de statut");
-
-            toast.success(currentlyActive ? "Compte désactivé" : "Compte activé");
+            toast.success(currentlyActive ? "Compte désactivé localement" : "Compte activé localement");
             fetchUsers();
         } catch (error: any) {
-            toast.error("Erreur", { description: error.message });
+            console.error('Toggle status error:', error);
+            // Affichage de l'erreur brute pour diagnostic (RLS, colonnes, etc.)
+            toast.error("Échec de la mise à jour", {
+                description: `Détails : ${error.message || 'Erreur inconnue'} (Code: ${error.code || 'N/A'})`
+            });
         } finally {
             setTogglingId(null);
         }
@@ -135,14 +123,14 @@ export const Admin = () => {
                     </h1>
                     <p className="text-slate-500 font-medium mt-2">Gestion des utilisateurs et des rôles système.</p>
                 </div>
-                <button onClick={() => setIsModalOpen(true)} className="bg-slate-900 hover:bg-slate-800 text-white px-6 py-3.5 rounded-2xl font-bold transition-all shadow-xl shadow-slate-200 flex items-center gap-2">
+                <button onClick={() => setIsModalOpen(true)} className="bg-slate-900 hover:bg-slate-800 text-white px-8 py-4 rounded-[1.5rem] font-black transition-all shadow-xl shadow-slate-200 flex items-center gap-2 text-xs uppercase tracking-widest active:scale-95">
                     <UserPlus size={20} /> Nouvel Utilisateur
                 </button>
             </div>
 
             <div className="bg-white rounded-[2rem] border border-slate-200 shadow-xl overflow-hidden">
                 <div className="px-8 py-6 border-b border-slate-100 bg-slate-50/50">
-                    <h3 className="font-bold text-slate-700 flex items-center gap-2">
+                    <h3 className="font-black text-slate-700 flex items-center gap-2 uppercase text-[10px] tracking-widest opacity-60">
                         <Users size={20} /> Liste des comptes ({users.length})
                     </h3>
                 </div>
@@ -155,12 +143,12 @@ export const Admin = () => {
                 ) : (
                     <div className="overflow-x-auto">
                         <table className="w-full text-left text-sm">
-                            <thead className="bg-white text-slate-400 border-b border-slate-100">
-                                <tr>
-                                    <th className="px-8 py-4 font-bold uppercase text-[10px] tracking-widest">Utilisateur</th>
-                                    <th className="px-8 py-4 font-bold uppercase text-[10px] tracking-widest">Rôle</th>
-                                    <th className="px-8 py-4 font-bold uppercase text-[10px] tracking-widest text-right">Statut</th>
-                                    <th className="px-8 py-4 font-bold uppercase text-[10px] tracking-widest text-center">Actions</th>
+                            <thead className="bg-slate-50/80 border-b border-slate-200">
+                                <tr className="h-14">
+                                    <th className="px-8 py-4 font-black text-slate-400 text-[10px] uppercase tracking-widest">Utilisateur</th>
+                                    <th className="px-8 py-4 font-black text-slate-400 text-[10px] uppercase tracking-widest">Rôle</th>
+                                    <th className="px-8 py-4 font-black text-slate-400 text-[10px] uppercase tracking-widest text-right">Statut</th>
+                                    <th className="px-8 py-4 font-black text-slate-400 text-[10px] uppercase tracking-widest text-center">Actions</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-50">

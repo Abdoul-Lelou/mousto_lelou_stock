@@ -86,10 +86,10 @@ export const Shell = ({ children }: { children: React.ReactNode }) => {
                   {/* Overlay pour fermer */}
                   <div className="fixed inset-0 z-40" onClick={() => setIsNotifOpen(false)} />
 
-                  {/* Panneau Notifications */}
-                  <div className="absolute top-12 right-0 w-80 bg-white rounded-3xl border border-slate-200 shadow-2xl z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-200 origin-top-right">
-                    <div className="px-5 py-4 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
-                      <p className="font-black text-xs text-slate-800 uppercase tracking-widest">Alertes & Infos</p>
+                  {/* Panneau Notifications Glassmorphism */}
+                  <div className="absolute top-12 right-0 w-80 bg-white/80 backdrop-blur-md rounded-[2rem] border border-white/20 shadow-2xl z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-200 origin-top-right border-slate-200/40">
+                    <div className="px-6 py-5 border-b border-slate-100/50 bg-white/50 flex justify-between items-center">
+                      <p className="font-black text-[10px] text-slate-800 uppercase tracking-widest">Notifications récentes</p>
                       {unreadCount > 0 && (
                         <button
                           onClick={() => markAllAsRead()}
@@ -100,32 +100,34 @@ export const Shell = ({ children }: { children: React.ReactNode }) => {
                       )}
                     </div>
 
-                    <div className="max-h-[400px] overflow-y-auto">
+                    <div className="max-h-[400px] overflow-y-auto scrollbar-hide">
                       {notifications.length === 0 ? (
                         <div className="py-12 flex flex-col items-center justify-center opacity-40">
-                          <Bell size={32} className="mb-2" />
-                          <p className="text-xs font-bold uppercase tracking-widest italic text-center">Aucune notification</p>
+                          <Bell size={32} className="mb-2 text-slate-300" />
+                          <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Aucune alerte</p>
                         </div>
                       ) : (
                         <div className="divide-y divide-slate-50">
-                          {notifications.map((n) => (
+                          {notifications.slice(0, 5).map((n) => (
                             <div
                               key={n.id}
-                              onClick={() => { if (!n.read) markAsRead(n.id); }}
-                              className={`p-4 hover:bg-slate-50 transition-colors cursor-pointer flex gap-4 ${!n.read ? 'bg-blue-50/30' : ''}`}
+                              onClick={() => { if (!n.is_read) markAsRead(n.id); }}
+                              className={`p-3 m-2 rounded-[1rem] transition-all cursor-pointer flex gap-3 hover:bg-white/60 hover:shadow-sm group relative ${!n.is_read ? 'bg-blue-50/60' : 'bg-transparent'}`}
                             >
-                              <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${n.type === 'low_stock' ? 'bg-orange-100 text-orange-600' :
-                                  n.type === 'sale' ? 'bg-emerald-100 text-emerald-600' : 'bg-blue-100 text-blue-600'
+                              <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 shadow-sm ${n.type === 'low_stock' || n.type === 'warning' ? 'bg-orange-100/80 text-orange-600 font-bold' :
+                                n.type === 'sale' ? 'bg-emerald-100/80 text-emerald-600 font-bold' : 'bg-blue-100/80 text-blue-600 font-bold'
                                 }`}>
-                                {n.type === 'low_stock' ? <Package size={18} /> :
-                                  n.type === 'sale' ? <ShoppingBag size={18} /> : <Bell size={18} />}
+                                {n.type === 'low_stock' || n.type === 'warning' ? <Package size={16} /> :
+                                  n.type === 'sale' ? <ShoppingBag size={16} /> : <Check size={16} />}
                               </div>
                               <div className="flex-1 min-w-0">
-                                <p className={`text-sm font-bold truncate ${!n.read ? 'text-slate-900' : 'text-slate-500'}`}>{n.title}</p>
-                                <p className="text-xs text-slate-400 line-clamp-2 mt-0.5 leading-relaxed">{n.message}</p>
-                                <p className="text-[9px] text-slate-300 font-bold uppercase tracking-widest mt-2">{new Date(n.created_at).toLocaleTimeString('fr-FR')}</p>
+                                <div className="flex justify-between items-start gap-2">
+                                  <p className={`text-[11px] font-black uppercase tracking-tight truncate ${!n.is_read ? 'text-slate-900 font-black' : 'text-slate-500'}`}>{n.title}</p>
+                                  <span className="text-[9px] text-slate-400 font-bold whitespace-nowrap">{new Date(n.created_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}</span>
+                                </div>
+                                <p className="text-[11px] text-slate-500 line-clamp-2 mt-0.5 leading-snug">{n.message}</p>
                               </div>
-                              {!n.read && <div className="w-1.5 h-1.5 bg-blue-600 rounded-full mt-2 self-start"></div>}
+                              {!n.is_read && <div className="absolute right-3 top-1/2 -translate-y-1/2 w-1.5 h-1.5 bg-blue-600 rounded-full shadow-sm animate-pulse"></div>}
                             </div>
                           ))}
                         </div>

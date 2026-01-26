@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import type { Product } from '../types';
-import { Search, Plus, Edit2, Trash2, X, Package, Loader2 } from 'lucide-react';
+import { Search, Plus, Edit2, Trash2, X, Package, Loader2, AlertTriangle, TrendingUp, DollarSign, ChevronLeft, ChevronRight } from 'lucide-react';
 import { toast, Toaster } from 'sonner';
 import { useAuth } from '../contexts/AuthContext';
 import { useNotifications } from '../contexts/useNotifications';
@@ -22,6 +22,9 @@ export const Inventory = () => {
   const [restockProduct, setRestockProduct] = useState<Product | null>(null);
   const [restockQuantity, setRestockQuantity] = useState(0);
 
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
+
   useEffect(() => { fetchProducts(); }, []);
 
   useEffect(() => {
@@ -37,7 +40,17 @@ export const Inventory = () => {
     if (filterType === 'low') res = res.filter(p => p.quantity > 0 && p.quantity <= p.min_threshold);
     if (filterType === 'out') res = res.filter(p => p.quantity === 0);
     setFilteredProducts(res);
+    setCurrentPage(1);
   }, [searchTerm, filterType, products]);
+
+  const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = filteredProducts.slice(indexOfFirstItem, indexOfLastItem);
+
+  const stockValue = products.reduce((acc, p) => acc + (p.quantity * p.unit_price), 0);
+  const lowStockCount = products.filter(p => p.quantity > 0 && p.quantity <= p.min_threshold).length;
+  const outOfStockCount = products.filter(p => p.quantity === 0).length;
 
   const fetchProducts = async () => {
     setLoading(true);
@@ -183,29 +196,80 @@ export const Inventory = () => {
 
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div>
-          <h1 className="text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight">Inventaire</h1>
-          <p className="text-slate-500 font-medium">Gestion du catalogue et des stocks.</p>
+          <h1 className="text-3xl font-black text-slate-900 uppercase tracking-tight">Inventaire</h1>
+          <p className="text-slate-500 text-sm font-medium italic">Gestion du catalogue et des stocks en temps réel</p>
         </div>
         {role === 'admin' && (
-          <button onClick={() => { setCurrentProduct({}); setIsModalOpen(true); }} className="w-full md:w-auto flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3.5 rounded-2xl font-bold transition-all shadow-xl shadow-blue-200">
+          <button onClick={() => { setCurrentProduct({}); setIsModalOpen(true); }} className="w-full md:w-auto flex items-center justify-center gap-2 bg-slate-900 hover:bg-slate-800 text-white px-8 py-4 rounded-[1.5rem] font-black transition-all shadow-xl shadow-slate-200 active:scale-95 text-xs uppercase tracking-widest">
             <Plus size={20} /> Nouveau Produit
           </button>
         )}
       </div>
 
-      <div className="bg-white p-2 rounded-3xl border border-slate-200 shadow-sm flex flex-col sm:flex-row gap-4">
-        <div className="relative flex-1">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-          <input type="text" placeholder="Recherche..." className="w-full pl-12 pr-4 py-3.5 bg-transparent outline-none text-sm" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
+      {/* KPI CARDS */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="bg-white p-6 rounded-[2rem] border border-slate-200 shadow-sm flex items-center gap-5 group hover:shadow-xl transition-all duration-300">
+          <div className="w-14 h-14 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
+            <DollarSign size={28} />
+          </div>
+          <div>
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Valeur du Stock</p>
+            <p className="text-2xl font-black text-slate-900 font-mono">
+              {stockValue.toLocaleString()} <span className="text-[10px] opacity-40">FG</span>
+            </p>
+          </div>
         </div>
-        <div className="flex bg-slate-100 p-1 rounded-2xl">
+
+        <div className="bg-white p-6 rounded-[2rem] border border-slate-200 shadow-sm flex items-center gap-5 group hover:shadow-xl transition-all duration-300">
+          <div className="w-14 h-14 bg-orange-50 text-orange-600 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
+            <AlertTriangle size={28} />
+          </div>
+          <div>
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Critique</p>
+            <p className="text-2xl font-black text-orange-600 font-mono">
+              {lowStockCount} <span className="text-[10px] opacity-40">Produits</span>
+            </p>
+          </div>
+        </div>
+
+        <div className="bg-white p-6 rounded-[2rem] border border-slate-200 shadow-sm flex items-center gap-5 group hover:shadow-xl transition-all duration-300">
+          <div className="w-14 h-14 bg-red-50 text-red-600 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
+            <TrendingUp size={28} />
+          </div>
+          <div>
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Ruptures</p>
+            <p className="text-2xl font-black text-red-600 font-mono">
+              {outOfStockCount} <span className="text-[10px] opacity-40">Total</span>
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div className="bg-white p-4 rounded-[2rem] border border-slate-200 shadow-sm flex flex-col md:flex-row gap-4 items-center">
+        <div className="relative flex-1 w-full">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+          <input
+            type="text"
+            placeholder="Rechercher un article par son nom..."
+            className="w-full pl-12 pr-4 py-4 bg-slate-50 border-none rounded-2xl text-sm outline-none placeholder:text-slate-400"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+        <div className="flex bg-slate-100 p-1 rounded-2xl w-full md:w-auto">
           {['all', 'low', 'out'].map((t) => (
-            <button key={t} onClick={() => setFilterType(t)} className={`px-5 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${filterType === t ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}>{t === 'all' ? 'Tous' : t === 'low' ? 'Critique' : 'Rupture'}</button>
+            <button
+              key={t}
+              onClick={() => setFilterType(t)}
+              className={`flex-1 md:flex-none px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${filterType === t ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+            >
+              {t === 'all' ? 'Tous' : t === 'low' ? 'Critique' : 'Rupture'}
+            </button>
           ))}
         </div>
       </div>
 
-      <div className="bg-white rounded-[2rem] border border-slate-200 shadow-xl overflow-hidden">
+      <div className="bg-white rounded-[2.5rem] border border-slate-200 shadow-xl overflow-hidden">
         {loading ? (
           <div className="py-24 flex flex-col items-center justify-center gap-4 text-slate-400">
             <Loader2 className="animate-spin text-blue-600" size={40} />
@@ -215,16 +279,16 @@ export const Inventory = () => {
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm border-collapse">
               <thead className="bg-slate-50/80 border-b border-slate-200">
-                <tr>
-                  <th className="px-6 py-5 font-bold text-slate-500 uppercase text-[10px] tracking-widest">Désignation</th>
-                  <th className="px-6 py-5 font-bold text-slate-500 uppercase text-[10px] tracking-widest text-right">Statut</th>
-                  <th className="px-6 py-5 font-bold text-slate-500 uppercase text-[10px] tracking-widest text-right">Stock</th>
-                  <th className="px-6 py-5 font-bold text-slate-500 uppercase text-[10px] tracking-widest text-right">Prix Unit</th>
-                  <th className="px-6 py-5 font-bold text-slate-500 uppercase text-[10px] tracking-widest text-center">Actions</th>
+                <tr className="h-14">
+                  <th className="px-6 py-4 font-black text-slate-400 text-[10px] uppercase tracking-widest">Désignation</th>
+                  <th className="px-6 py-4 font-black text-slate-400 text-[10px] uppercase tracking-widest text-right">Statut</th>
+                  <th className="px-6 py-4 font-black text-slate-400 text-[10px] uppercase tracking-widest text-right">En Stock</th>
+                  <th className="px-6 py-4 font-black text-slate-400 text-[10px] uppercase tracking-widest text-right">Prix Unitaire</th>
+                  <th className="px-6 py-4 font-black text-slate-400 text-[10px] uppercase tracking-widest text-center">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {filteredProducts.length === 0 ? (
+                {currentItems.length === 0 ? (
                   <tr>
                     <td colSpan={5} className="py-24 text-center">
                       <div className="flex flex-col items-center gap-4">
@@ -239,7 +303,7 @@ export const Inventory = () => {
                     </td>
                   </tr>
                 ) : (
-                  filteredProducts.map((p) => (
+                  currentItems.map((p) => (
                     <tr key={p.id} className="hover:bg-blue-50/30 transition-colors group">
                       <td className="px-6 py-5">
                         <div className="flex items-center gap-3">
@@ -253,8 +317,12 @@ export const Inventory = () => {
                       <td className="px-6 py-5 text-right">
                         <span className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase border ${p.quantity === 0 ? 'bg-red-50 text-red-700 border-red-100' : p.quantity <= p.min_threshold ? 'bg-orange-50 text-orange-700 border-orange-100' : 'bg-emerald-50 text-emerald-700 border-emerald-100'}`}>{p.quantity === 0 ? 'Rupture' : p.quantity <= p.min_threshold ? 'Critique' : 'Ok'}</span>
                       </td>
-                      <td className="px-6 py-5 text-right font-mono font-bold text-slate-700">{p.quantity}</td>
-                      <td className="px-6 py-5 text-right font-mono font-bold text-slate-900">{p.unit_price.toLocaleString()} FG</td>
+                      <td className="px-6 py-5 text-right font-mono font-bold text-slate-700">
+                        <span className="text-lg">{p.quantity}</span>
+                      </td>
+                      <td className="px-6 py-5 text-right font-mono font-black text-blue-600">
+                        {p.unit_price.toLocaleString()} <span className="text-[10px] opacity-60">FG</span>
+                      </td>
                       <td className="px-6 py-5 text-center space-x-1">
                         {role === 'admin' ? (
                           <>
@@ -271,6 +339,39 @@ export const Inventory = () => {
                 )}
               </tbody>
             </table>
+          </div>
+        )}
+
+        {/* PAGINATION */}
+        {!loading && totalPages > 1 && (
+          <div className="px-6 py-4 bg-slate-50/50 border-t border-slate-200 flex justify-center">
+            <div className="flex items-center gap-2">
+              <button
+                disabled={currentPage === 1}
+                onClick={() => setCurrentPage(prev => prev - 1)}
+                className="p-2 border border-slate-200 rounded-lg bg-white hover:text-blue-600 disabled:opacity-20 transition-all cursor-pointer"
+              >
+                <ChevronLeft size={18} />
+              </button>
+              <div className="flex items-center gap-1.5">
+                {[...Array(totalPages)].map((_, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setCurrentPage(i + 1)}
+                    className={`w-8 h-8 rounded-lg text-[10px] font-black transition-all cursor-pointer ${currentPage === i + 1 ? 'bg-slate-900 text-white shadow-md' : 'bg-white text-slate-400 border border-slate-100 hover:bg-slate-50'}`}
+                  >
+                    {i + 1}
+                  </button>
+                )).slice(Math.max(0, currentPage - 2), Math.min(totalPages, currentPage + 1))}
+              </div>
+              <button
+                disabled={currentPage === totalPages}
+                onClick={() => setCurrentPage(prev => prev + 1)}
+                className="p-2 border border-slate-200 rounded-lg bg-white hover:text-blue-600 disabled:opacity-20 transition-all cursor-pointer"
+              >
+                <ChevronRight size={18} />
+              </button>
+            </div>
           </div>
         )}
       </div>

@@ -24,6 +24,28 @@ export const Login = () => {
             toast.error("Échec de connexion", { description: error.message });
             setLoading(false);
         } else {
+            // Vérification immédiate du statut du compte
+            const { data: userSession } = await supabase.auth.getSession();
+            const userId = userSession.session?.user?.id;
+
+            if (userId) {
+                const { data: profile } = await supabase
+                    .from('profiles')
+                    .select('id, role, firstname, is_active')
+                    .eq('id', userId)
+                    .single();
+
+                // On ne bloque que si le profil est trouvé ET explicitement inactif
+                if (profile && profile.is_active === false) {
+                    await supabase.auth.signOut();
+                    toast.error("Accès refusé", {
+                        description: "Votre compte a été désactivé. Veuillez contacter l'administrateur."
+                    });
+                    setLoading(false);
+                    return;
+                }
+            }
+
             toast.success("Bienvenue !");
             navigate('/');
         }
@@ -79,9 +101,9 @@ export const Login = () => {
                         <button
                             type="submit"
                             disabled={loading}
-                            className="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl font-bold shadow-lg shadow-blue-200 transition-all flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed mt-2"
+                            className="w-full py-5 bg-slate-900 hover:bg-black text-white rounded-[1.5rem] font-black uppercase text-xs tracking-widest shadow-xl shadow-slate-200 transition-all flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed mt-4 active:scale-95"
                         >
-                            {loading ? <Loader2 className="animate-spin" size={20} /> : "Se connecter"}
+                            {loading ? <Loader2 className="animate-spin" size={20} /> : "Se connecter au système"}
                         </button>
                     </form>
 

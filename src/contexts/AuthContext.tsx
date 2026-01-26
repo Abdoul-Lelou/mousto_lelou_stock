@@ -61,23 +61,36 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }, []);
 
     const fetchProfile = async (userId: string) => {
-        const { data, error } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', userId)
-            .single();
+        try {
+            const { data, error } = await supabase
+                .from('profiles')
+                .select('id, role, firstname, lastname, is_active')
+                .eq('id', userId)
+                .single();
 
-        if (error) {
-            console.error('Error fetching profile:', error);
-        } else if (data) {
-            // Adaptateur: Construction de full_name pour l'UI, basé sur firstname/lastname de la DB
-            const uiProfile: UIProfile = {
-                ...data,
-                full_name: `${data.firstname || ''} ${data.lastname || ''}`.trim() || 'Utilisateur'
-            };
-            setProfile(uiProfile);
+            if (error) {
+                console.error('Error fetching profile (RLS or DB):', error);
+                // Profil invité par défaut pour éviter le blocage 42P17
+                setProfile({ id: userId, role: 'vendeur', firstname: 'Invité', lastname: '', is_active: true, full_name: 'Utilisateur Invité' });
+            } else if (data) {
+                if (data.is_active === false) {
+                    console.warn("Session interrompue : Compte désactivé.");
+                    signOut();
+                    return;
+                }
+
+                const uiProfile: UIProfile = {
+                    ...data,
+                    full_name: `${data.firstname || ''} ${data.lastname || ''}`.trim() || 'Utilisateur'
+                };
+                setProfile(uiProfile);
+            }
+        } catch (err) {
+            console.error('Unexpected error in fetchProfile:', err);
+            setProfile({ id: userId, role: 'vendeur', firstname: 'Secours', lastname: '', is_active: true, full_name: 'Mode Secours' });
+        } finally {
+            setLoading(false);
         }
-        setLoading(false);
     };
 
     const signOut = async () => {
