@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
-import { History, Search, Calendar, Loader2, ChevronLeft, ChevronRight, User } from 'lucide-react';
+import { History, Search, Calendar, Loader2, ChevronLeft, ChevronRight, User, Package } from 'lucide-react';
 import { toast, Toaster } from 'sonner';
+import { EmptyState } from '../components/common/EmptyState';
 
 interface ActivityLog {
     id: string;
@@ -61,7 +62,26 @@ export const ActivityLogs = () => {
         if (action.includes('delete')) return 'bg-red-50 text-red-600 dark:bg-red-900/30 dark:text-red-400 border-red-100 dark:border-red-900/50';
         if (action.includes('edit')) return 'bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400 border-blue-100 dark:border-blue-900/50';
         if (action.includes('restock')) return 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400 border-emerald-100 dark:border-emerald-900/50';
+        if (action.includes('archive')) return 'bg-orange-50 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400 border-orange-100 dark:border-orange-900/50';
         return 'bg-slate-50 text-slate-600 dark:bg-slate-800 dark:text-slate-400 border-slate-100 dark:border-slate-700';
+    };
+
+    const formatDetails = (log: ActivityLog) => {
+        const details = log.details || {};
+        switch (log.action) {
+            case 'archive_product':
+                return `Produit ID: ${details.product_id?.slice(0, 8)}...`;
+            case 'delete_user':
+                return `Utilisateur cible: ${details.target_user_id?.slice(0, 8)}...`;
+            case 'edit_product':
+                return `Produit: ${details.name || details.product_id} (Diff: ${details.stock_diff > 0 ? '+' : ''}${details.stock_diff})`;
+            case 'restock_product':
+                return `Produit: ${details.product_id?.slice(0, 8)}... (+${details.added})`;
+            case 'toggle_user_status':
+                return `User: ${details.target_user_id?.slice(0, 8)}... (Statut: ${details.new_status ? 'Actif' : 'Bloqué'})`;
+            default:
+                return JSON.stringify(details);
+        }
     };
 
     const formatActionName = (action: string) => {
@@ -135,7 +155,13 @@ export const ActivityLogs = () => {
                             <tbody className="divide-y divide-slate-50 dark:divide-slate-800/50">
                                 {paginatedLogs.length === 0 ? (
                                     <tr>
-                                        <td colSpan={4} className="py-20 text-center text-slate-400 opacity-60">Aucun log correspondant</td>
+                                        <td colSpan={4}>
+                                            <EmptyState
+                                                icon={Package}
+                                                title="Aucun journal trouvé"
+                                                description="Aucune activité ne correspond à vos critères de recherche ou de filtrage."
+                                            />
+                                        </td>
                                     </tr>
                                 ) : (
                                     paginatedLogs.map((log) => (
@@ -166,10 +192,10 @@ export const ActivityLogs = () => {
                                                     {formatActionName(log.action)}
                                                 </span>
                                             </td>
-                                            <td className="px-8 py-5 max-w-xs">
-                                                <div className="bg-slate-50 dark:bg-slate-800/50 p-2 rounded-lg text-[10px] font-mono text-slate-500 dark:text-slate-400 truncate group-hover:whitespace-normal group-hover:break-words">
-                                                    {JSON.stringify(log.details)}
-                                                </div>
+                                            <td className="px-8 py-5">
+                                                <p className="text-xs font-bold text-slate-600 dark:text-slate-400 truncate max-w-[200px] group-hover:whitespace-normal group-hover:overflow-visible transition-all">
+                                                    {formatDetails(log)}
+                                                </p>
                                             </td>
                                         </tr>
                                     ))

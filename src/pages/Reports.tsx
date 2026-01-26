@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
-import { History, Package, Search, Printer, ChevronLeft, ChevronRight, X, Calendar, User, Tag, Info, BarChart3, RotateCcw } from 'lucide-react';
+import { History, Package, Search, Printer, ChevronLeft, ChevronRight, X, Calendar, User, Tag, Info, BarChart3, RotateCcw, ShoppingCart } from 'lucide-react';
 import { toast, Toaster } from 'sonner';
+import { EmptyState } from '../components/common/EmptyState';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
@@ -311,7 +312,15 @@ export const Reports = () => {
               {loading ? (
                 <tr><td colSpan={4} className="text-center py-24 animate-pulse text-slate-400 font-bold uppercase tracking-widest">Récupération des données...</td></tr>
               ) : currentItems.length === 0 ? (
-                <tr><td colSpan={4} className="text-center py-20 text-slate-400">Aucune vente trouvée.</td></tr>
+                <tr>
+                  <td colSpan={4}>
+                    <EmptyState
+                      icon={ShoppingCart}
+                      title="Aucune vente"
+                      description="Aucune transaction n'a été enregistrée pour cette période ou cet utilisateur."
+                    />
+                  </td>
+                </tr>
               ) : currentItems.map((sale) => (
                 <tr
                   key={sale.id}

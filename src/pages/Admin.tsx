@@ -7,6 +7,8 @@ import { toast, Toaster } from 'sonner';
 import { logActivity } from '../lib/activity';
 import { ConfirmationModal } from '../components/common/ConfirmationModal';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { EmptyState } from '../components/common/EmptyState';
+import { User as UserIcon } from 'lucide-react';
 
 export const Admin = () => {
     const { session } = useAuth();
@@ -191,52 +193,63 @@ export const Admin = () => {
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-50">
-                                {paginatedUsers.map((u) => (
-                                    <tr key={u.id} className="hover:bg-blue-50/30 dark:hover:bg-blue-900/10 transition-colors">
-                                        <td className="px-8 py-4">
-                                            <div>
-                                                <p className="font-bold text-slate-800 dark:text-slate-200 text-base">{u.firstname} {u.lastname}</p>
-                                                <p className="text-xs text-slate-400 font-mono">ID: {u.id.slice(0, 8)}...</p>
-                                            </div>
-                                        </td>
-                                        <td className="px-8 py-4">
-                                            <span className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider ${u.role === 'admin' ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400' : 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400'}`}>
-                                                {u.role}
-                                            </span>
-                                        </td>
-                                        <td className="px-8 py-4 text-right">
-                                            <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold ${u.is_active ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400' : 'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400'}`}>
-                                                {u.is_active ? <CheckCircle size={12} /> : <Ban size={12} />}
-                                                {u.is_active ? 'Actif' : 'Désactivé'}
-                                            </span>
-                                        </td>
-                                        <td className="px-8 py-4 text-center">
-                                            {u.id !== session?.user?.id ? (
-                                                <div className="flex items-center gap-2 justify-center">
-                                                    <button
-                                                        onClick={() => handleToggleUserStatus(u.id, u.is_active)}
-                                                        disabled={togglingId === u.id}
-                                                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 min-w-[120px] justify-center ${u.is_active ? 'bg-red-50 text-red-600 hover:bg-red-100' : 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100'} ${togglingId === u.id ? 'opacity-50 cursor-wait' : 'cursor-pointer hover:scale-105'}`}
-                                                    >
-                                                        {togglingId === u.id ? <Loader2 className="animate-spin" size={14} /> : (u.is_active ? <><Ban size={14} /> Désactiver</> : <><CheckCircle size={14} /> Activer</>)}
-                                                    </button>
-                                                    <button
-                                                        onClick={() => {
-                                                            setUserToDelete(u.id);
-                                                            setDeleteModalOpen(true);
-                                                        }}
-                                                        className="p-1.5 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-lg hover:bg-red-600 hover:text-white transition-all shadow-sm"
-                                                        title="Supprimer définitivement"
-                                                    >
-                                                        <Trash2 size={16} />
-                                                    </button>
-                                                </div>
-                                            ) : (
-                                                <span className="text-xs text-slate-300 font-medium">—</span>
-                                            )}
+                                {paginatedUsers.length === 0 ? (
+                                    <tr>
+                                        <td colSpan={4}>
+                                            <EmptyState
+                                                icon={UserIcon}
+                                                title="Aucun utilisateur"
+                                                description="Aucun compte ne correspond à votre recherche ou la liste est vide."
+                                            />
                                         </td>
                                     </tr>
-                                ))}
+                                ) : (
+                                    paginatedUsers.map((u) => (
+                                        <tr key={u.id} className="hover:bg-blue-50/30 dark:hover:bg-blue-900/10 transition-colors">
+                                            <td className="px-8 py-4">
+                                                <div>
+                                                    <p className="font-bold text-slate-800 dark:text-slate-200 text-base">{u.firstname} {u.lastname}</p>
+                                                    <p className="text-xs text-slate-400 font-mono">ID: {u.id.slice(0, 8)}...</p>
+                                                </div>
+                                            </td>
+                                            <td className="px-8 py-4">
+                                                <span className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider ${u.role === 'admin' ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400' : 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400'}`}>
+                                                    {u.role}
+                                                </span>
+                                            </td>
+                                            <td className="px-8 py-4 text-right">
+                                                <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold ${u.is_active ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400' : 'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400'}`}>
+                                                    {u.is_active ? <CheckCircle size={12} /> : <Ban size={12} />}
+                                                    {u.is_active ? 'Actif' : 'Désactivé'}
+                                                </span>
+                                            </td>
+                                            <td className="px-8 py-4 text-center">
+                                                {u.id !== session?.user?.id ? (
+                                                    <div className="flex items-center gap-2 justify-center">
+                                                        <button
+                                                            onClick={() => handleToggleUserStatus(u.id, u.is_active)}
+                                                            disabled={togglingId === u.id}
+                                                            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 min-w-[120px] justify-center ${u.is_active ? 'bg-red-50 text-red-600 hover:bg-red-100' : 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100'} ${togglingId === u.id ? 'opacity-50 cursor-wait' : 'cursor-pointer hover:scale-105'}`}
+                                                        >
+                                                            {togglingId === u.id ? <Loader2 className="animate-spin" size={14} /> : (u.is_active ? <><Ban size={14} /> Désactiver</> : <><CheckCircle size={14} /> Activer</>)}
+                                                        </button>
+                                                        <button
+                                                            onClick={() => {
+                                                                setUserToDelete(u.id);
+                                                                setDeleteModalOpen(true);
+                                                            }}
+                                                            className="p-1.5 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-lg hover:bg-red-600 hover:text-white transition-all shadow-sm"
+                                                            title="Supprimer définitivement"
+                                                        >
+                                                            <Trash2 size={16} />
+                                                        </button>
+                                                    </div>
+                                                ) : (
+                                                    <span className="text-xs text-slate-300 font-medium">—</span>
+                                                )}
+                                            </td>
+                                        </tr>
+                                    )))}
                             </tbody>
                         </table>
                     </div>

@@ -13,7 +13,12 @@ Solution Full-Stack sécurisée (React/Supabase) pour le suivi de stock et l'ana
 -   **Backend** : Supabase (Auth, DB Realtime, Edge Functions).
 -   **Reporting** : Recharts & jsPDF.
 
-## 🧠 Expertise Technique
--   **Résolution Critique** : Correction définitive de l'erreur d'infinité récursive SQL.
--   **Optimisation Realtime** : Gestion performante des abonnements aux canaux PostgreSQL.
--   **Sécurité Multi-niveau** : Verrou de session côté client couplé aux politiques de base de données.
+## 🛡️ Audit & Traçabilité (Compliance)
+-   **Système d'Audit Complet** : Chaque action sensible (suppression de compte, modification manuelle de stock, réapprovisionnement) est consignée dans un journal d'activité inaltérable.
+-   **Intégrité Comptable** : Les produits ne sont jamais supprimés physiquement. L'archivage logique (`is_archived`) garantit que l'historique des ventes et les statistiques restent cohérents au fil des années.
+-   **Transparence Admin** : Un tableau de bord dédié permet aux administrateurs de filtrer et d'analyser les événements système par date et par type d'action.
+
+## 🖼️ Excellence UI/UX
+-   **Mode Sombre Natif** : Interface adaptative avec mémorisation des préférences utilisateur.
+-   **Empty States Professionnels** : Guidage de l'utilisateur via des composants dédiés lorsque les données sont absentes.
+-   **Design Réactif** : Sidebar rétractable et interfaces optimisées pour l'usage mobile en magasin (tablettes et smartphones).

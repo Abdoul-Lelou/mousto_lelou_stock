@@ -7,6 +7,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useNotifications } from '../contexts/useNotifications';
 import { logActivity } from '../lib/activity';
 import { ConfirmationModal } from '../components/common/ConfirmationModal';
+import { EmptyState } from '../components/common/EmptyState';
 
 export const Inventory = () => {
   const { session, role } = useAuth();
@@ -23,6 +24,7 @@ export const Inventory = () => {
   const [isRestockModalOpen, setIsRestockModalOpen] = useState(false);
   const [restockProduct, setRestockProduct] = useState<Product | null>(null);
   const [restockQuantity, setRestockQuantity] = useState(0);
+  const [showArchived, setShowArchived] = useState(false);
 
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 6;
@@ -43,12 +45,17 @@ export const Inventory = () => {
 
   useEffect(() => {
     let res = products.filter(p => p.name.toLowerCase().includes(searchTerm.toLowerCase()));
-    res = res.filter(p => p.is_archived === false); // Masquer les archivés
+    if (!showArchived) {
+      res = res.filter(p => p.is_archived === false);
+    } else {
+      res = res.filter(p => p.is_archived === true);
+    }
+
     if (filterType === 'low') res = res.filter(p => p.quantity > 0 && p.quantity <= p.min_threshold);
     if (filterType === 'out') res = res.filter(p => p.quantity === 0);
     setFilteredProducts(res);
     setCurrentPage(1);
-  }, [searchTerm, filterType, products]);
+  }, [searchTerm, filterType, products, showArchived]);
 
   const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
   const indexOfLastItem = currentPage * itemsPerPage;
@@ -63,10 +70,20 @@ export const Inventory = () => {
     setLoading(true);
     const { data } = await supabase.from('products')
       .select('*')
-      .eq('is_archived', false)
       .order('created_at', { ascending: false });
     if (data) setProducts(data);
     setLoading(false);
+  };
+
+  const handleUnarchive = async (id: string) => {
+    const { error } = await supabase.from('products').update({ is_archived: false }).eq('id', id);
+    if (!error) {
+      await logActivity('unarchive_product', { product_id: id });
+      toast.success("Produit restauré");
+      fetchProducts();
+    } else {
+      toast.error("Erreur lors de la restauration");
+    }
   };
 
   const handleSave = async (e: React.FormEvent) => {
@@ -285,16 +302,25 @@ export const Inventory = () => {
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
-        <div className="flex bg-slate-100 p-1 rounded-2xl w-full md:w-auto">
+        <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-2xl w-full md:w-auto">
           {['all', 'low', 'out'].map((t) => (
             <button
               key={t}
               onClick={() => setFilterType(t)}
-              className={`flex-1 md:flex-none px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${filterType === t ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+              className={`flex-1 md:flex-none px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${filterType === t ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
             >
               {t === 'all' ? 'Tous' : t === 'low' ? 'Critique' : 'Rupture'}
             </button>
           ))}
+        </div>
+
+        <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-2xl w-full md:w-auto">
+          <button
+            onClick={() => setShowArchived(!showArchived)}
+            className={`px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${showArchived ? 'bg-orange-500 text-white shadow-lg shadow-orange-200 dark:shadow-none' : 'text-slate-400 hover:text-slate-600'}`}
+          >
+            {showArchived ? 'Voir Actifs' : 'Voir Archives'}
+          </button>
         </div>
       </div>
 
@@ -307,7 +333,7 @@ export const Inventory = () => {
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm border-collapse">
-              <thead className="bg-slate-50/80 border-b border-slate-200">
+              <thead className="bg-slate-50/80 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-800">
                 <tr className="h-14">
                   <th className="px-6 py-4 font-black text-slate-400 text-[10px] uppercase tracking-widest">Désignation</th>
                   <th className="px-6 py-4 font-black text-slate-400 text-[10px] uppercase tracking-widest text-right">Statut</th>
@@ -316,57 +342,70 @@ export const Inventory = () => {
                   <th className="px-6 py-4 font-black text-slate-400 text-[10px] uppercase tracking-widest text-center">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800/50">
                 {currentItems.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="py-24 text-center">
-                      <div className="flex flex-col items-center gap-4">
-                        <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center">
-                          <Package className="text-slate-300" size={40} />
-                        </div>
-                        <div>
-                          <p className="text-lg font-bold text-slate-700 mb-1">Aucun produit</p>
-                          <p className="text-sm text-slate-400">Cliquez sur 'Nouveau Produit' pour commencer.</p>
-                        </div>
-                      </div>
+                    <td colSpan={5}>
+                      <EmptyState
+                        icon={Package}
+                        title={showArchived ? "Aucune archive" : "Inventaire vide"}
+                        description={showArchived ? "Vous n'avez aucun produit archivé pour le moment." : "Commencez par ajouter votre premier produit."}
+                      />
                     </td>
                   </tr>
                 ) : (
                   currentItems.map((p) => (
-                    <tr key={p.id} className="hover:bg-blue-50/30 transition-colors group">
+                    <tr key={p.id} className={`transition-colors group ${p.is_archived ? 'bg-slate-50/50 dark:bg-slate-900/50 grayscale opacity-60' : 'hover:bg-blue-50/30 dark:hover:bg-blue-900/10'}`}>
                       <td className="px-6 py-5">
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-slate-400 group-hover:bg-blue-100 group-hover:text-blue-600 transition-colors"><Package size={18} /></div>
+                          <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-slate-400 transition-colors ${p.is_archived ? 'bg-slate-200 dark:bg-slate-700' : 'bg-slate-100 dark:bg-slate-800 group-hover:bg-blue-100 dark:group-hover:bg-blue-900 group-hover:text-blue-600'}`}>
+                            <Package size={18} />
+                          </div>
                           <div className="flex flex-col">
-                            <span className="font-bold text-slate-800 text-base">{p.name}</span>
+                            <span className="font-bold text-slate-800 dark:text-slate-200 text-base">{p.name}</span>
                             <span className="text-[10px] font-bold text-slate-400 font-mono tracking-tighter">SKU: {p.sku || '---'}</span>
                           </div>
                         </div>
                       </td>
                       <td className="px-6 py-5 text-right">
-                        <span className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase border ${p.quantity === 0 ? 'bg-red-50 text-red-700 border-red-100' : p.quantity <= p.min_threshold ? 'bg-orange-50 text-orange-700 border-orange-100' : 'bg-emerald-50 text-emerald-700 border-emerald-100'}`}>{p.quantity === 0 ? 'Rupture' : p.quantity <= p.min_threshold ? 'Critique' : 'Ok'}</span>
+                        {p.is_archived ? (
+                          <span className="px-3 py-1.5 rounded-xl text-[10px] font-black uppercase border bg-slate-100 text-slate-500 border-slate-200">Archivé</span>
+                        ) : (
+                          <span className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase border ${p.quantity === 0 ? 'bg-red-50 text-red-700 border-red-100' : p.quantity <= p.min_threshold ? 'bg-orange-50 text-orange-700 border-orange-100' : 'bg-emerald-50 text-emerald-700 border-emerald-100'}`}>{p.quantity === 0 ? 'Rupture' : p.quantity <= p.min_threshold ? 'Critique' : 'Ok'}</span>
+                        )}
                       </td>
-                      <td className="px-6 py-5 text-right font-mono font-bold text-slate-700">
+                      <td className="px-6 py-5 text-right font-mono font-bold text-slate-700 dark:text-slate-300">
                         <span className="text-lg">{p.quantity}</span>
                       </td>
-                      <td className="px-6 py-5 text-right font-mono font-black text-blue-600">
+                      <td className="px-6 py-5 text-right font-mono font-black text-blue-600 dark:text-blue-400">
                         {p.unit_price.toLocaleString()} <span className="text-[10px] opacity-60">FG</span>
                       </td>
                       <td className="px-6 py-5 text-center space-x-1">
                         {role === 'admin' ? (
                           <>
-                            <button onClick={() => { setRestockProduct(p); setIsRestockModalOpen(true); }} className="p-2 text-slate-400 hover:text-emerald-600 hover:bg-white rounded-xl transition-all" title="Réapprovisionner"><Plus size={18} /></button>
-                            <button onClick={() => { setCurrentProduct(p); setIsModalOpen(true); }} className="p-2 text-slate-400 hover:text-blue-600 hover:bg-white rounded-xl transition-all"><Edit2 size={18} /></button>
-                            <button
-                              onClick={() => handleDelete(p.id)}
-                              className="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-colors border border-red-100 dark:border-red-900/50"
-                              title="Archiver"
-                            >
-                              <Trash2 size={16} />
-                            </button>
+                            {p.is_archived ? (
+                              <button
+                                onClick={() => handleUnarchive(p.id)}
+                                className="px-4 py-2 bg-blue-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-700 transition-all shadow-lg shadow-blue-200 dark:shadow-none"
+                              >
+                                Désarchiver
+                              </button>
+                            ) : (
+                              <>
+                                <button onClick={() => { setRestockProduct(p); setIsRestockModalOpen(true); }} className="p-2 text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-white dark:hover:bg-slate-800 rounded-xl transition-all" title="Réapprovisionner"><Plus size={18} /></button>
+                                <button onClick={() => { setCurrentProduct(p); setIsModalOpen(true); }} className="p-2 text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-white dark:hover:bg-slate-800 rounded-xl transition-all"><Edit2 size={18} /></button>
+                                <button
+                                  onClick={() => handleDelete(p.id)}
+                                  className="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-colors border border-red-100 dark:border-red-900/50"
+                                  title="Archiver"
+                                >
+                                  <Trash2 size={16} />
+                                </button>
+                              </>
+                            )}
                           </>
                         ) : (
-                          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Consultation</span>
+                          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest text-slate-400">Consultation</span>
                         )}
                       </td>
                     </tr>
