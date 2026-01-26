@@ -1,4 +1,3 @@
-import React from 'react';
 import { X, AlertTriangle } from 'lucide-react';
 
 interface ConfirmationModalProps {
@@ -58,8 +57,8 @@ export const ConfirmationModal = ({
                                 onClose();
                             }}
                             className={`flex-1 py-3 px-6 text-white rounded-xl font-black shadow-lg transition-all uppercase text-[10px] tracking-widest active:scale-95 ${isDanger
-                                    ? 'bg-red-600 hover:bg-red-700 shadow-red-200 dark:shadow-none'
-                                    : 'bg-blue-600 hover:bg-blue-700 shadow-blue-200 dark:shadow-none'
+                                ? 'bg-red-600 hover:bg-red-700 shadow-red-200 dark:shadow-none'
+                                : 'bg-blue-600 hover:bg-blue-700 shadow-blue-200 dark:shadow-none'
                                 }`}
                         >
                             {confirmText}

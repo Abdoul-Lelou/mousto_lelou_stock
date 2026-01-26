@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import type { Product } from '../types/index';
-import { AlertTriangle, Package, TrendingUp, DollarSign, Activity, ChevronRight, Plus, X } from 'lucide-react';
+import { AlertTriangle, Package, TrendingUp, DollarSign, Activity, ChevronRight } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, AreaChart, Area } from 'recharts';
 import { Link } from 'react-router-dom';
 import { toast, Toaster } from 'sonner';
@@ -9,8 +9,6 @@ import { toast, Toaster } from 'sonner';
 export const Dashboard = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [currentProduct, setCurrentProduct] = useState<Partial<Product>>({});
   const [salesHistory, setSalesHistory] = useState<any[]>([]);
 
   useEffect(() => {
@@ -42,51 +40,9 @@ export const Dashboard = () => {
       setLoading(false);
     }
     getData();
-  }, [loading]);
+  }, []);
 
-  const handleSave = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const quantity = Number(currentProduct?.quantity);
-    const unitPrice = Number(currentProduct?.unit_price);
-    const minThreshold = Number(currentProduct?.min_threshold);
 
-    if (quantity < 0 || unitPrice < 0) {
-      toast.error("Valeurs invalides");
-      return;
-    }
-
-    try {
-      // Duplicate checks
-      const { data: dupName } = await supabase.from('products').select('id').ilike('name', currentProduct?.name || '').limit(1);
-      if (dupName && dupName.length > 0) throw new Error("Ce nom de produit existe déjà");
-
-      const { data: newProduct, error: insertError } = await supabase.from('products').insert([{
-        ...currentProduct,
-        quantity,
-        unit_price: unitPrice,
-        min_threshold: minThreshold
-      }]).select().single();
-
-      if (insertError) throw insertError;
-
-      if (quantity > 0) {
-        await supabase.from('stock_movements').insert([{
-          product_id: newProduct.id,
-          type: 'in',
-          quantity: quantity,
-          reason: 'Stock initial (Dashboard)',
-          created_by: (await supabase.auth.getSession()).data.session?.user?.id
-        }]);
-      }
-
-      toast.success("Produit ajouté avec succès");
-      setIsModalOpen(false);
-      setCurrentProduct({});
-      setLoading(true);
-    } catch (err: any) {
-      toast.error("Erreur", { description: err.message });
-    }
-  };
 
   const totalItems = products.reduce((acc, p) => acc + p.quantity, 0);
   const stockValue = products.reduce((acc, p) => acc + (p.quantity * p.unit_price), 0);
