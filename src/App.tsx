@@ -6,6 +6,7 @@ import { Sales } from './pages/Sales';
 import { Reports } from './pages/Reports';
 import { Login } from './pages/Login';
 import { Admin } from './pages/Admin';
+import { ActivityLogs } from './pages/ActivityLogs';
 import { ProfilePage } from './pages/Profile';
 import { AuthProvider } from './contexts/AuthContext';
 import { ProtectedRoute } from './components/layout/ProtectedRoute';
@@ -30,6 +31,7 @@ export function App() {
           {/* Admin Routes (Only 'admin' role) */}
           <Route element={<ProtectedRoute allowedRoles={['admin']} />}>
             <Route element={<Shell><Admin /></Shell>} path="/admin" />
+            <Route element={<Shell><ActivityLogs /></Shell>} path="/logs" />
           </Route>
 
           {/* Fallback */}

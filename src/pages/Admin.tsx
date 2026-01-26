@@ -5,6 +5,8 @@ import { type UserRole, type Profile } from '../types';
 import { Shield, UserPlus, Users, Loader2, CheckCircle, X, Ban, Trash2 } from 'lucide-react';
 import { toast, Toaster } from 'sonner';
 import { logActivity } from '../lib/activity';
+import { ConfirmationModal } from '../components/common/ConfirmationModal';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 export const Admin = () => {
     const { session } = useAuth();
@@ -12,6 +14,12 @@ export const Admin = () => {
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [togglingId, setTogglingId] = useState<string | null>(null);
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 6;
+
+    // Delete Modal State
+    const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+    const [userToDelete, setUserToDelete] = useState<string | null>(null);
 
     // New User Form State
     const [newUserEmail, setNewUserEmail] = useState('');
@@ -36,6 +44,12 @@ export const Admin = () => {
             setLoading(false);
         }
     };
+
+    const totalPages = Math.ceil(users.length / itemsPerPage);
+    const paginatedUsers = users.slice(
+        (currentPage - 1) * itemsPerPage,
+        currentPage * itemsPerPage
+    );
 
     const handleCreateUser = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -118,25 +132,22 @@ export const Admin = () => {
         }
     };
 
-    const handleDeleteUser = async (userId: string) => {
-        if (userId === session?.user?.id) {
-            toast.error("Impossible de supprimer votre propre compte");
-            return;
-        }
-
-        if (!window.confirm('Supprimer définitivement ce compte ?')) return;
+    const handleDeleteUser = async () => {
+        if (!userToDelete) return;
 
         try {
-            const { error } = await supabase.from('profiles').delete().eq('id', userId);
+            const { error } = await supabase.from('profiles').delete().eq('id', userToDelete);
             if (error) throw error;
 
-            await logActivity('delete_user', { target_user_id: userId });
+            await logActivity('delete_user', { target_user_id: userToDelete });
 
             toast.success("Compte supprimé avec succès");
             fetchUsers();
         } catch (error: any) {
             console.error('Delete user error:', error);
             toast.error("Échec de la suppression", { description: error.message });
+        } finally {
+            setUserToDelete(null);
         }
     };
 
@@ -180,21 +191,21 @@ export const Admin = () => {
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-50">
-                                {users.map((u) => (
-                                    <tr key={u.id} className="hover:bg-blue-50/30 transition-colors">
+                                {paginatedUsers.map((u) => (
+                                    <tr key={u.id} className="hover:bg-blue-50/30 dark:hover:bg-blue-900/10 transition-colors">
                                         <td className="px-8 py-4">
                                             <div>
-                                                <p className="font-bold text-slate-800 text-base">{u.firstname} {u.lastname}</p>
+                                                <p className="font-bold text-slate-800 dark:text-slate-200 text-base">{u.firstname} {u.lastname}</p>
                                                 <p className="text-xs text-slate-400 font-mono">ID: {u.id.slice(0, 8)}...</p>
                                             </div>
                                         </td>
                                         <td className="px-8 py-4">
-                                            <span className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider ${u.role === 'admin' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'}`}>
+                                            <span className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider ${u.role === 'admin' ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400' : 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400'}`}>
                                                 {u.role}
                                             </span>
                                         </td>
                                         <td className="px-8 py-4 text-right">
-                                            <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold ${u.is_active ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-600'}`}>
+                                            <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold ${u.is_active ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400' : 'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400'}`}>
                                                 {u.is_active ? <CheckCircle size={12} /> : <Ban size={12} />}
                                                 {u.is_active ? 'Actif' : 'Désactivé'}
                                             </span>
@@ -210,8 +221,11 @@ export const Admin = () => {
                                                         {togglingId === u.id ? <Loader2 className="animate-spin" size={14} /> : (u.is_active ? <><Ban size={14} /> Désactiver</> : <><CheckCircle size={14} /> Activer</>)}
                                                     </button>
                                                     <button
-                                                        onClick={() => handleDeleteUser(u.id)}
-                                                        className="p-1.5 bg-red-50 text-red-600 rounded-lg hover:bg-red-600 hover:text-white transition-all shadow-sm"
+                                                        onClick={() => {
+                                                            setUserToDelete(u.id);
+                                                            setDeleteModalOpen(true);
+                                                        }}
+                                                        className="p-1.5 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-lg hover:bg-red-600 hover:text-white transition-all shadow-sm"
                                                         title="Supprimer définitivement"
                                                     >
                                                         <Trash2 size={16} />
@@ -227,7 +241,43 @@ export const Admin = () => {
                         </table>
                     </div>
                 )}
+
+                {/* Pagination Controls */}
+                {!loading && totalPages > 1 && (
+                    <div className="px-8 py-4 bg-slate-50/50 dark:bg-slate-800/50 border-t border-slate-100 dark:border-slate-700 flex items-center justify-between">
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                            {users.length} comptes au total • Page {currentPage} sur {totalPages}
+                        </p>
+                        <div className="flex gap-2">
+                            <button
+                                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                                disabled={currentPage === 1}
+                                className="p-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 disabled:opacity-30 transition-all shadow-sm"
+                            >
+                                <ChevronLeft size={16} />
+                            </button>
+                            <button
+                                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                                disabled={currentPage === totalPages}
+                                className="p-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 disabled:opacity-30 transition-all shadow-sm"
+                            >
+                                <ChevronRight size={16} />
+                            </button>
+                        </div>
+                    </div>
+                )}
             </div>
+
+            {/* Modal de Confirmation de Suppression */}
+            <ConfirmationModal
+                isOpen={deleteModalOpen}
+                onClose={() => setDeleteModalOpen(false)}
+                onConfirm={handleDeleteUser}
+                title="Confirmation de suppression"
+                message="Attention : Cette action est irréversible. Toutes les données liées à ce compte seront définitivement supprimées du système."
+                confirmText="Confirmer la suppression"
+                isDanger={true}
+            />
 
             {isModalOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-md animate-in fade-in duration-200">

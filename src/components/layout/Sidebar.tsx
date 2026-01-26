@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Package, ShoppingCart, LogOut, Box, PieChart, Shield } from 'lucide-react';
+import { LayoutDashboard, Package, ShoppingCart, LogOut, Box, PieChart, Shield, History as HistoryIcon } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 
 const menuItems = [
@@ -50,8 +50,8 @@ export const Sidebar = ({ onClose }: SidebarProps) => {
               to={item.path}
               onClick={() => onClose?.()}
               className={`flex items-center gap-4 px-5 py-4 rounded-2xl text-sm font-bold transition-all duration-300 group relative overflow-hidden ${isActive
-                  ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/30 translate-x-1'
-                  : 'hover:bg-slate-800/50 hover:text-white'
+                ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/30 translate-x-1'
+                : 'hover:bg-slate-800/50 hover:text-white'
                 }`}
             >
               <item.icon size={20} className={`relative z-10 transition-transform duration-300 ${isActive ? 'scale-110' : 'group-hover:scale-110'}`} />
@@ -70,12 +70,23 @@ export const Sidebar = ({ onClose }: SidebarProps) => {
               to="/admin"
               onClick={() => onClose?.()}
               className={`flex items-center gap-4 px-5 py-4 rounded-2xl text-sm font-bold transition-all duration-300 group ${currentPath === '/admin'
-                  ? 'bg-purple-600 text-white shadow-lg shadow-purple-900/30 translate-x-1'
-                  : 'hover:bg-slate-800/50 hover:text-white'
+                ? 'bg-purple-600 text-white shadow-lg shadow-purple-900/30 translate-x-1'
+                : 'hover:bg-slate-800/50 hover:text-white'
                 }`}
             >
               <Shield size={20} className="transition-transform group-hover:scale-110" />
               <span>Administration</span>
+            </Link>
+            <Link
+              to="/logs"
+              onClick={() => onClose?.()}
+              className={`flex items-center gap-4 px-5 py-4 rounded-2xl text-sm font-bold transition-all duration-300 group ${currentPath === '/logs'
+                ? 'bg-purple-600 text-white shadow-lg shadow-purple-900/30 translate-x-1'
+                : 'hover:bg-slate-800/50 hover:text-white'
+                }`}
+            >
+              <HistoryIcon size={20} className="transition-transform group-hover:scale-110" />
+              <span>Journal d'Activité</span>
             </Link>
           </div>
         )}

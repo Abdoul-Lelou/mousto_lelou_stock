@@ -31,7 +31,7 @@ export const Reports = () => {
   const [loadingSynthesis, setLoadingSynthesis] = useState(false);
 
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
+  const itemsPerPage = 6;
 
   useEffect(() => { fetchSales(); }, [role, user]);
 

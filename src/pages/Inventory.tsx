@@ -6,6 +6,7 @@ import { toast, Toaster } from 'sonner';
 import { useAuth } from '../contexts/AuthContext';
 import { useNotifications } from '../contexts/useNotifications';
 import { logActivity } from '../lib/activity';
+import { ConfirmationModal } from '../components/common/ConfirmationModal';
 
 export const Inventory = () => {
   const { session, role } = useAuth();
@@ -24,7 +25,11 @@ export const Inventory = () => {
   const [restockQuantity, setRestockQuantity] = useState(0);
 
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
+  const itemsPerPage = 6;
+
+  // Archive Modal State
+  const [archiveModalOpen, setArchiveModalOpen] = useState(false);
+  const [productToArchive, setProductToArchive] = useState<string | null>(null);
 
   useEffect(() => { fetchProducts(); }, []);
 
@@ -196,17 +201,22 @@ export const Inventory = () => {
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (confirm("Archiver ce produit ? Il restera en base mais ne sera plus visible.")) {
-      const { error } = await supabase.from('products').update({ is_archived: true }).eq('id', id);
-      if (!error) {
-        await logActivity('archive_product', { product_id: id });
-        toast.success("Produit archivé");
-        fetchProducts();
-      } else {
-        toast.error("Erreur lors de l'archivage");
-      }
+  const handleDelete = (id: string) => {
+    setProductToArchive(id);
+    setArchiveModalOpen(true);
+  };
+
+  const confirmArchive = async () => {
+    if (!productToArchive) return;
+    const { error } = await supabase.from('products').update({ is_archived: true }).eq('id', productToArchive);
+    if (!error) {
+      await logActivity('archive_product', { product_id: productToArchive });
+      toast.success("Produit archivé");
+      fetchProducts();
+    } else {
+      toast.error("Erreur lors de l'archivage");
     }
+    setProductToArchive(null);
   };
 
   return (
@@ -347,7 +357,13 @@ export const Inventory = () => {
                           <>
                             <button onClick={() => { setRestockProduct(p); setIsRestockModalOpen(true); }} className="p-2 text-slate-400 hover:text-emerald-600 hover:bg-white rounded-xl transition-all" title="Réapprovisionner"><Plus size={18} /></button>
                             <button onClick={() => { setCurrentProduct(p); setIsModalOpen(true); }} className="p-2 text-slate-400 hover:text-blue-600 hover:bg-white rounded-xl transition-all"><Edit2 size={18} /></button>
-                            <button onClick={() => handleDelete(p.id)} className="p-2 text-slate-400 hover:text-red-600 hover:bg-white rounded-xl transition-all"><Trash2 size={18} /></button>
+                            <button
+                              onClick={() => handleDelete(p.id)}
+                              className="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-colors border border-red-100 dark:border-red-900/50"
+                              title="Archiver"
+                            >
+                              <Trash2 size={16} />
+                            </button>
                           </>
                         ) : (
                           <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Consultation</span>
@@ -361,39 +377,42 @@ export const Inventory = () => {
           </div>
         )}
 
-        {/* PAGINATION */}
+        {/* Pagination Controls */}
         {!loading && totalPages > 1 && (
-          <div className="px-6 py-4 bg-slate-50/50 border-t border-slate-200 flex justify-center">
-            <div className="flex items-center gap-2">
+          <div className="px-8 py-4 bg-slate-50/50 dark:bg-slate-800/50 border-t border-slate-100 dark:border-slate-700 flex items-center justify-between">
+            <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">
+              {filteredProducts.length} produits au total • Page {currentPage} sur {totalPages}
+            </p>
+            <div className="flex gap-2">
               <button
+                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                 disabled={currentPage === 1}
-                onClick={() => setCurrentPage(prev => prev - 1)}
-                className="p-2 border border-slate-200 rounded-lg bg-white hover:text-blue-600 disabled:opacity-20 transition-all cursor-pointer"
+                className="p-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 disabled:opacity-30 transition-all shadow-sm"
               >
-                <ChevronLeft size={18} />
+                <ChevronLeft size={16} />
               </button>
-              <div className="flex items-center gap-1.5">
-                {[...Array(totalPages)].map((_, i) => (
-                  <button
-                    key={i}
-                    onClick={() => setCurrentPage(i + 1)}
-                    className={`w-8 h-8 rounded-lg text-[10px] font-black transition-all cursor-pointer ${currentPage === i + 1 ? 'bg-slate-900 text-white shadow-md' : 'bg-white text-slate-400 border border-slate-100 hover:bg-slate-50'}`}
-                  >
-                    {i + 1}
-                  </button>
-                )).slice(Math.max(0, currentPage - 2), Math.min(totalPages, currentPage + 1))}
-              </div>
               <button
+                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
                 disabled={currentPage === totalPages}
-                onClick={() => setCurrentPage(prev => prev + 1)}
-                className="p-2 border border-slate-200 rounded-lg bg-white hover:text-blue-600 disabled:opacity-20 transition-all cursor-pointer"
+                className="p-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 disabled:opacity-30 transition-all shadow-sm"
               >
-                <ChevronRight size={18} />
+                <ChevronRight size={16} />
               </button>
             </div>
           </div>
         )}
       </div>
+
+      {/* Modal de Confirmation d'Archivage */}
+      <ConfirmationModal
+        isOpen={archiveModalOpen}
+        onClose={() => setArchiveModalOpen(false)}
+        onConfirm={confirmArchive}
+        title="Archivage de produit"
+        message="Voulez-vous vraiment archiver ce produit ? Il ne sera plus visible dans l'inventaire courant mais restera en base pour l'historique des statistiques."
+        confirmText="Confirmer l'archivage"
+        isDanger={false}
+      />
 
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-md animate-in fade-in duration-200">

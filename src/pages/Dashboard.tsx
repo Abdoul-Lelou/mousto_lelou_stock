@@ -110,20 +110,14 @@ export const Dashboard = () => {
       {/* Header & Controls */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
         <div>
-          <h1 className="text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight">Tableau de Bord</h1>
-          <p className="text-slate-500 mt-1 font-medium">Aperçu en temps réel de votre activité.</p>
+          <h1 className="text-2xl md:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">Tableau de Bord</h1>
+          <p className="text-slate-500 dark:text-slate-400 mt-1 font-medium">Aperçu en temps réel de votre activité.</p>
         </div>
         <div className="flex items-center gap-3">
-          <div className="bg-white px-4 py-2 rounded-xl border border-slate-200 text-xs font-mono text-slate-500 shadow-sm flex items-center gap-2 hidden sm:flex">
+          <div className="bg-white dark:bg-slate-800 px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-mono text-slate-500 dark:text-slate-400 shadow-sm flex items-center gap-2 hidden sm:flex">
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
             {new Date().toLocaleTimeString()}
           </div>
-          <button
-            onClick={() => setIsModalOpen(true)}
-            className="bg-slate-900 hover:bg-slate-800 text-white px-6 py-3 rounded-xl font-black flex items-center gap-2 shadow-lg shadow-slate-200 transition-all text-[10px] uppercase tracking-widest"
-          >
-            <Plus size={18} /> Ajouter
-          </button>
         </div>
       </div>
 
@@ -145,13 +139,13 @@ export const Dashboard = () => {
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
         <div className="xl:col-span-2 space-y-6">
-          <div className="bg-white p-8 rounded-[2.5rem] border border-slate-200 shadow-sm">
+          <div className="bg-white dark:bg-slate-800 p-8 rounded-[2.5rem] border border-slate-200 dark:border-slate-700 shadow-sm">
             <div className="flex justify-between items-center mb-8">
               <div>
-                <h3 className="font-black text-slate-800 uppercase text-xs tracking-widest text-slate-400">Évolution des Ventes</h3>
-                <p className="text-sm font-bold text-slate-900 mt-1">7 derniers jours</p>
+                <h3 className="font-black text-slate-800 dark:text-slate-200 uppercase text-xs tracking-widest text-slate-400">Évolution des Ventes</h3>
+                <p className="text-sm font-bold text-slate-900 dark:text-slate-100 mt-1">7 derniers jours</p>
               </div>
-              <div className="flex items-center gap-2 px-3 py-1 bg-blue-50 text-blue-600 rounded-full text-[10px] font-black uppercase">
+              <div className="flex items-center gap-2 px-3 py-1 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-full text-[10px] font-black uppercase">
                 <Activity size={12} /> Live
               </div>
             </div>
@@ -164,12 +158,12 @@ export const Dashboard = () => {
                       <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
                     </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" className="opacity-10" />
                   <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 10, fontWeight: 'bold' }} dy={10} />
                   <YAxis axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 10 }} tickFormatter={(v) => `${v / 1000}k`} />
                   <Tooltip
-                    contentStyle={{ borderRadius: '20px', border: 'none', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)', padding: '12px' }}
-                    itemStyle={{ color: '#1e293b', fontWeight: 'bold' }}
+                    contentStyle={{ borderRadius: '20px', border: 'none', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)', padding: '12px', background: '#1e293b' }}
+                    itemStyle={{ color: '#fff', fontWeight: 'bold' }}
                   />
                   <Area type="monotone" dataKey="total" stroke="#3b82f6" strokeWidth={4} fillOpacity={1} fill="url(#colorTotal)" />
                 </AreaChart>
@@ -177,15 +171,15 @@ export const Dashboard = () => {
             </div>
           </div>
 
-          <div className="bg-white p-6 rounded-[2rem] border border-slate-200 shadow-sm">
-            <h3 className="font-bold text-slate-800 mb-6 uppercase text-xs tracking-widest text-slate-400">Volume de Stock (Top 10)</h3>
+          <div className="bg-white dark:bg-slate-800 p-6 rounded-[2rem] border border-slate-200 dark:border-slate-700 shadow-sm">
+            <h3 className="font-bold text-slate-800 dark:text-slate-200 mb-6 uppercase text-xs tracking-widest text-slate-400">Volume de Stock (Top 10)</h3>
             <div className="h-[250px]">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={products.sort((a, b) => b.quantity - a.quantity).slice(0, 10)} barSize={40}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" className="opacity-10" />
                   <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 11 }} dy={10} />
                   <YAxis axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 11 }} />
-                  <Tooltip cursor={{ fill: '#f8fafc' }} contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }} />
+                  <Tooltip cursor={{ fill: 'transparent' }} contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }} />
                   <Bar dataKey="quantity" radius={[6, 6, 0, 0]}>
                     {products.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={entry.quantity <= entry.min_threshold ? '#ef4444' : '#3b82f6'} />
@@ -198,27 +192,27 @@ export const Dashboard = () => {
         </div>
 
         {/* Alerts Panel */}
-        <div className="bg-white rounded-[2rem] border border-slate-200 shadow-sm flex flex-col h-full overflow-hidden">
-          <div className="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
-            <h3 className="font-black text-slate-800 flex items-center gap-2 uppercase text-xs tracking-widest text-slate-400">
+        <div className="bg-white dark:bg-slate-800 rounded-[2rem] border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col h-full overflow-hidden">
+          <div className="p-5 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center bg-slate-50/50 dark:bg-slate-800/50">
+            <h3 className="font-black text-slate-800 dark:text-slate-200 flex items-center gap-2 uppercase text-xs tracking-widest text-slate-400">
               <AlertTriangle size={18} className="text-orange-500" /> Priorités
             </h3>
             <span className="px-2.5 py-1 rounded-full bg-orange-100 text-orange-700 text-xs font-bold">{criticalProducts.length}</span>
           </div>
 
-          <div className="flex-1 overflow-y-auto max-h-[400px] p-2 space-y-1">
+          <div className="flex-1 overflow-y-auto max-h-[400px] p-2 space-y-1 font-sans">
             {criticalProducts.map(p => (
-              <Link to="/inventory" key={p.id} className="flex justify-between items-center p-3 hover:bg-slate-50 rounded-xl transition-all group">
+              <Link to="/inventory" key={p.id} className="flex justify-between items-center p-3 hover:bg-slate-50 dark:hover:bg-slate-700/50 rounded-xl transition-all group">
                 <div className="min-w-0 pr-4">
-                  <p className="text-sm font-semibold text-slate-800 truncate">{p.name}</p>
-                  <p className="text-[10px] font-bold text-slate-400 mt-0.5">SEUIL: {p.min_threshold}</p>
+                  <p className="text-sm font-semibold text-slate-800 dark:text-slate-200 truncate">{p.name}</p>
+                  <p className="text-[10px] font-bold text-slate-400 mt-0.5 uppercase">SEUIL: {p.min_threshold}</p>
                 </div>
                 <span className={`text-lg font-bold font-mono ${p.quantity === 0 ? 'text-red-600' : 'text-orange-500'}`}>{p.quantity}</span>
               </Link>
             ))}
           </div>
-          <div className="p-4 border-t border-slate-100">
-            <Link to="/inventory" className="w-full py-3 text-sm text-blue-600 font-bold hover:bg-blue-50 rounded-xl transition-colors flex items-center justify-center gap-2">
+          <div className="p-4 border-t border-slate-100 dark:border-slate-700">
+            <Link to="/inventory" className="w-full py-3 text-sm text-blue-600 dark:text-blue-400 font-bold hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-xl transition-colors flex items-center justify-center gap-2 uppercase tracking-wide">
               Voir l'inventaire complet <ChevronRight size={16} />
             </Link>
           </div>
@@ -226,31 +220,6 @@ export const Dashboard = () => {
       </div>
 
       <Toaster position="top-right" richColors />
-
-      {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-md animate-in fade-in duration-200">
-          <div className="bg-white rounded-[2.5rem] w-full max-w-lg shadow-2xl overflow-hidden">
-            <div className="px-8 py-6 border-b border-slate-50 flex justify-between items-center bg-slate-50/50">
-              <h3 className="font-black text-xl text-slate-800 uppercase tracking-tight">Nouveau Produit</h3>
-              <button onClick={() => setIsModalOpen(false)} className="p-2 bg-slate-200 rounded-full hover:bg-red-50 hover:text-red-500 transition-all"><X size={20} /></button>
-            </div>
-            <form onSubmit={handleSave} className="p-8 space-y-6">
-              <div className="space-y-4">
-                <input required placeholder="Nom du produit" className="w-full p-4 bg-slate-50 border-none rounded-2xl font-bold" value={currentProduct?.name || ''} onChange={e => setCurrentProduct({ ...currentProduct, name: e.target.value })} />
-                <div className="grid grid-cols-2 gap-4">
-                  <input placeholder="Code SKU" className="w-full p-4 bg-slate-50 border-none rounded-2xl font-mono" value={currentProduct?.sku || ''} onChange={e => setCurrentProduct({ ...currentProduct, sku: e.target.value })} />
-                  <input required type="number" placeholder="Prix Unit (FG)" className="w-full p-4 bg-slate-50 border-none rounded-2xl font-mono" value={currentProduct?.unit_price || ''} onChange={e => setCurrentProduct({ ...currentProduct, unit_price: Number(e.target.value) })} />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <input required type="number" placeholder="Stock Initial" className="w-full p-4 bg-slate-50 border-none rounded-2xl font-mono" value={currentProduct?.quantity || ''} onChange={e => setCurrentProduct({ ...currentProduct, quantity: Number(e.target.value) })} />
-                  <input required type="number" placeholder="Seuil Alerte" className="w-full p-4 bg-orange-50 border-none rounded-2xl font-mono text-orange-700" value={currentProduct?.min_threshold || ''} onChange={e => setCurrentProduct({ ...currentProduct, min_threshold: Number(e.target.value) })} />
-                </div>
-              </div>
-              <button type="submit" className="w-full py-4 bg-blue-600 text-white rounded-[1.5rem] font-black shadow-xl shadow-blue-100 hover:bg-blue-700 transition-all uppercase tracking-widest">Enregistrer</button>
-            </form>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
