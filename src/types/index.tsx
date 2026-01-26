@@ -19,6 +19,7 @@ export interface Product {
   unit_price: number;
   sku?: string;
   image_url?: string;
+  is_archived: boolean;
   created_at: string;
 }
 

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import type { Product } from '../types/index';
 import { AlertTriangle, Package, TrendingUp, DollarSign, Activity, ChevronRight, Plus, X } from 'lucide-react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, AreaChart, Area } from 'recharts';
 import { Link } from 'react-router-dom';
 import { toast, Toaster } from 'sonner';
 
@@ -11,15 +11,38 @@ export const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentProduct, setCurrentProduct] = useState<Partial<Product>>({});
+  const [salesHistory, setSalesHistory] = useState<any[]>([]);
 
   useEffect(() => {
     async function getData() {
-      const { data } = await supabase.from('products').select('*').order('created_at', { ascending: false });
-      if (data) setProducts(data);
+      const [prodRes, salesRes] = await Promise.all([
+        supabase.from('products').select('*').eq('is_archived', false).order('name'),
+        supabase.from('sales').select('total_price, created_at').gte('created_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString())
+      ]);
+
+      if (prodRes.data) setProducts(prodRes.data);
+
+      if (salesRes.data) {
+        // Grouper par jour
+        const days = Array.from({ length: 7 }, (_, i) => {
+          const d = new Date();
+          d.setDate(d.getDate() - (6 - i));
+          return d.toLocaleDateString('fr-FR', { weekday: 'short' });
+        });
+
+        const grouping: Record<string, number> = {};
+        salesRes.data.forEach(s => {
+          const day = new Date(s.created_at).toLocaleDateString('fr-FR', { weekday: 'short' });
+          grouping[day] = (grouping[day] || 0) + s.total_price;
+        });
+
+        setSalesHistory(days.map(d => ({ name: d, total: grouping[d] || 0 })));
+      }
+
       setLoading(false);
     }
     getData();
-  }, [loading]); // Add loading dependency to refresh when loading state changes (triggered by save)
+  }, [loading]);
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -121,22 +144,56 @@ export const Dashboard = () => {
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-        <div className="xl:col-span-2 bg-white p-6 rounded-[2rem] border border-slate-200 shadow-sm">
-          <h3 className="font-bold text-slate-800 mb-6 uppercase text-xs tracking-widest text-slate-400">Volume de Stock (Top 10)</h3>
-          <div className="h-[350px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={products.sort((a, b) => b.quantity - a.quantity).slice(0, 10)} barSize={40}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 11 }} dy={10} />
-                <YAxis axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 11 }} />
-                <Tooltip cursor={{ fill: '#f8fafc' }} contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }} />
-                <Bar dataKey="quantity" radius={[6, 6, 0, 0]}>
-                  {products.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.quantity <= entry.min_threshold ? '#ef4444' : '#3b82f6'} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
+        <div className="xl:col-span-2 space-y-6">
+          <div className="bg-white p-8 rounded-[2.5rem] border border-slate-200 shadow-sm">
+            <div className="flex justify-between items-center mb-8">
+              <div>
+                <h3 className="font-black text-slate-800 uppercase text-xs tracking-widest text-slate-400">Évolution des Ventes</h3>
+                <p className="text-sm font-bold text-slate-900 mt-1">7 derniers jours</p>
+              </div>
+              <div className="flex items-center gap-2 px-3 py-1 bg-blue-50 text-blue-600 rounded-full text-[10px] font-black uppercase">
+                <Activity size={12} /> Live
+              </div>
+            </div>
+            <div className="h-[300px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={salesHistory}>
+                  <defs>
+                    <linearGradient id="colorTotal" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
+                      <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 10, fontWeight: 'bold' }} dy={10} />
+                  <YAxis axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 10 }} tickFormatter={(v) => `${v / 1000}k`} />
+                  <Tooltip
+                    contentStyle={{ borderRadius: '20px', border: 'none', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)', padding: '12px' }}
+                    itemStyle={{ color: '#1e293b', fontWeight: 'bold' }}
+                  />
+                  <Area type="monotone" dataKey="total" stroke="#3b82f6" strokeWidth={4} fillOpacity={1} fill="url(#colorTotal)" />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+          <div className="bg-white p-6 rounded-[2rem] border border-slate-200 shadow-sm">
+            <h3 className="font-bold text-slate-800 mb-6 uppercase text-xs tracking-widest text-slate-400">Volume de Stock (Top 10)</h3>
+            <div className="h-[250px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={products.sort((a, b) => b.quantity - a.quantity).slice(0, 10)} barSize={40}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 11 }} dy={10} />
+                  <YAxis axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 11 }} />
+                  <Tooltip cursor={{ fill: '#f8fafc' }} contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }} />
+                  <Bar dataKey="quantity" radius={[6, 6, 0, 0]}>
+                    {products.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.quantity <= entry.min_threshold ? '#ef4444' : '#3b82f6'} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
           </div>
         </div>
 

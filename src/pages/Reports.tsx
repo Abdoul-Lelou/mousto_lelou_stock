@@ -4,6 +4,7 @@ import { History, Package, Search, Printer, ChevronLeft, ChevronRight, X, Calend
 import { toast, Toaster } from 'sonner';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import * as XLSX from 'xlsx';
 import { type Sale } from '../types';
 import { AuditJournal } from '../components/AuditJournal';
 
@@ -30,7 +31,7 @@ export const Reports = () => {
   const [loadingSynthesis, setLoadingSynthesis] = useState(false);
 
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 5;
+  const itemsPerPage = 10;
 
   useEffect(() => { fetchSales(); }, [role, user]);
 
@@ -179,6 +180,48 @@ export const Reports = () => {
     } finally {
       setLoadingSynthesis(false);
     }
+  };
+
+  const exportSynthesisExcel = () => {
+    const ws = XLSX.utils.json_to_sheet(productSummaries.map(s => ({
+      'Produit': s.name,
+      'Entrées (+)': s.inQty,
+      'Sorties (-)': s.outQty,
+      'Flux Net': s.inQty - s.outQty,
+      'Valeur Sorties (FG)': s.totalValue
+    })));
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Synthèse Stocks");
+    XLSX.writeFile(wb, `Synthese_Lelou_${new Date().toLocaleDateString()}.xlsx`);
+    toast.success("Export Excel terminé");
+  };
+
+  const exportSynthesisPDF = () => {
+    const doc = new jsPDF();
+    doc.setFontSize(20);
+    doc.text("MOUSTO_LELOU - RAPPORT DE SYNTHÈSE", 105, 20, { align: 'center' });
+
+    doc.setFontSize(10);
+    doc.text(`Période : ${dateFilter === 'all' ? 'Toute' : dateFilter}`, 14, 30);
+    doc.text(`Généré le : ${new Date().toLocaleString('fr-FR')}`, 14, 35);
+
+    autoTable(doc, {
+      startY: 45,
+      head: [['Produit', 'Entrées (+)', 'Sorties (-)', 'Flux Net', 'Valeur Sorties']],
+      body: productSummaries.map(s => [
+        s.name,
+        `+${s.inQty}`,
+        `-${s.outQty}`,
+        `${s.inQty - s.outQty}`,
+        `${s.totalValue.toLocaleString()} FG`
+      ]),
+      foot: [['TOTAL', '', '', '', `${productSummaries.reduce((a, b) => a + b.totalValue, 0).toLocaleString()} FG`]],
+      theme: 'striped',
+      headStyles: { fillColor: [30, 41, 59] }
+    });
+
+    doc.save(`Rapport_Lelou_${new Date().toLocaleDateString()}.pdf`);
+    toast.success("Rapport PDF généré");
   };
 
   return (
@@ -450,6 +493,10 @@ export const Reports = () => {
         title="Synthèse Analytique par Produit"
         maxWidth="max-w-4xl"
       >
+        <div className="absolute top-6 right-16 flex gap-2">
+          <button onClick={exportSynthesisExcel} className="p-2 bg-emerald-50 text-emerald-600 rounded-lg hover:bg-emerald-600 hover:text-white transition-all text-[10px] font-black uppercase tracking-widest flex items-center gap-1 border border-emerald-100">Excel</button>
+          <button onClick={exportSynthesisPDF} className="p-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-600 hover:text-white transition-all text-[10px] font-black uppercase tracking-widest flex items-center gap-1 border border-red-100">PDF</button>
+        </div>
         {loadingSynthesis ? (
           <div className="py-20 flex flex-col items-center justify-center gap-4 text-slate-400">
             <div className="w-12 h-12 border-4 border-blue-100 border-t-blue-500 rounded-full animate-spin"></div>

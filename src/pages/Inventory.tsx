@@ -5,6 +5,7 @@ import { Search, Plus, Edit2, Trash2, X, Package, Loader2, AlertTriangle, Trendi
 import { toast, Toaster } from 'sonner';
 import { useAuth } from '../contexts/AuthContext';
 import { useNotifications } from '../contexts/useNotifications';
+import { logActivity } from '../lib/activity';
 
 export const Inventory = () => {
   const { session, role } = useAuth();
@@ -23,7 +24,7 @@ export const Inventory = () => {
   const [restockQuantity, setRestockQuantity] = useState(0);
 
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 5;
+  const itemsPerPage = 10;
 
   useEffect(() => { fetchProducts(); }, []);
 
@@ -37,6 +38,7 @@ export const Inventory = () => {
 
   useEffect(() => {
     let res = products.filter(p => p.name.toLowerCase().includes(searchTerm.toLowerCase()));
+    res = res.filter(p => p.is_archived === false); // Masquer les archivés
     if (filterType === 'low') res = res.filter(p => p.quantity > 0 && p.quantity <= p.min_threshold);
     if (filterType === 'out') res = res.filter(p => p.quantity === 0);
     setFilteredProducts(res);
@@ -54,7 +56,10 @@ export const Inventory = () => {
 
   const fetchProducts = async () => {
     setLoading(true);
-    const { data } = await supabase.from('products').select('*').order('created_at', { ascending: false });
+    const { data } = await supabase.from('products')
+      .select('*')
+      .eq('is_archived', false)
+      .order('created_at', { ascending: false });
     if (data) setProducts(data);
     setLoading(false);
   };
@@ -95,6 +100,13 @@ export const Inventory = () => {
             created_by: session?.user?.id
           }]);
         }
+
+        await logActivity('edit_product', {
+          product_id: currentProduct.id,
+          name: currentProduct.name,
+          stock_diff: diff
+        });
+
         toast.success("Produit modifié");
       } else {
         // CRÉATION
@@ -157,6 +169,12 @@ export const Inventory = () => {
         created_by: session?.user?.id
       }]);
 
+      await logActivity('restock_product', {
+        product_id: restockProduct.id,
+        added: restockQuantity,
+        new_total: newQuantity
+      });
+
       toast.success(`+${restockQuantity} unités ajoutées`);
 
       // ALERT TRIGGER : Stock faible (si on restock mais que c'est toujours bas...)
@@ -179,13 +197,14 @@ export const Inventory = () => {
   };
 
   const handleDelete = async (id: string) => {
-    if (confirm("Supprimer ce produit ?")) {
-      const { error } = await supabase.from('products').delete().eq('id', id);
+    if (confirm("Archiver ce produit ? Il restera en base mais ne sera plus visible.")) {
+      const { error } = await supabase.from('products').update({ is_archived: true }).eq('id', id);
       if (!error) {
-        toast.success("Produit supprimé");
+        await logActivity('archive_product', { product_id: id });
+        toast.success("Produit archivé");
         fetchProducts();
       } else {
-        toast.error("Erreur (ce produit a peut-être des ventes liées)");
+        toast.error("Erreur lors de l'archivage");
       }
     }
   };

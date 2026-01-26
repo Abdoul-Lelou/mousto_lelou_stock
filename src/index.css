@@ -2,15 +2,19 @@
 
 /* Tu peux garder tes styles personnalisés en dessous si tu veux */
 body {
-  @apply bg-[#F8FAFC] text-slate-900;
+  @apply bg-[#F8FAFC] text-slate-900 transition-colors duration-300;
   margin: 0;
 }
 
+.dark body {
+  @apply bg-slate-950 text-slate-100;
+}
+
 /* Harmonisation des interactions */
-button, 
-a, 
-select, 
-input[type="button"], 
+button,
+a,
+select,
+input[type="button"],
 input[type="submit"],
 [role="button"] {
   cursor: pointer !important;
@@ -18,19 +22,23 @@ input[type="submit"],
 }
 
 /* Lignes de tableau cliquables (comme dans le Journal d'Audit) */
-tr[onClick], 
+tr[onClick],
 tr.cursor-pointer {
   cursor: pointer !important;
 }
 
 @media print {
+
   /* Cacher tout sauf la section invoice */
   body * {
     visibility: hidden;
   }
-  #invoice, #invoice * {
+
+  #invoice,
+  #invoice * {
     visibility: visible;
   }
+
   #invoice {
     position: absolute;
     left: 0;
@@ -38,5 +46,3 @@ tr.cursor-pointer {
     width: 100%;
   }
 }
-
-

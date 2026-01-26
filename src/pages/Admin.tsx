@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { type UserRole, type Profile } from '../types';
 import { Shield, UserPlus, Users, Loader2, CheckCircle, X, Ban, Trash2 } from 'lucide-react';
 import { toast, Toaster } from 'sonner';
+import { logActivity } from '../lib/activity';
 
 export const Admin = () => {
     const { session } = useAuth();
@@ -99,6 +100,11 @@ export const Admin = () => {
 
             if (profileError) throw profileError;
 
+            await logActivity('toggle_user_status', {
+                target_user_id: userId,
+                new_status: !currentlyActive
+            });
+
             toast.success(currentlyActive ? "Compte désactivé localement" : "Compte activé localement");
             fetchUsers();
         } catch (error: any) {
@@ -123,6 +129,8 @@ export const Admin = () => {
         try {
             const { error } = await supabase.from('profiles').delete().eq('id', userId);
             if (error) throw error;
+
+            await logActivity('delete_user', { target_user_id: userId });
 
             toast.success("Compte supprimé avec succès");
             fetchUsers();
