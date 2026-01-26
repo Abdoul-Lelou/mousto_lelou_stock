@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
-import { History, Search, Calendar, Loader2, ChevronLeft, ChevronRight, User, Package } from 'lucide-react';
+import { History, Search, Calendar, Loader2, ChevronLeft, ChevronRight, User, Package, Trash2, Archive, Edit, Plus, Info } from 'lucide-react';
 import { toast, Toaster } from 'sonner';
 import { EmptyState } from '../components/common/EmptyState';
 
@@ -68,20 +68,36 @@ export const ActivityLogs = () => {
 
     const formatDetails = (log: ActivityLog) => {
         const details = log.details || {};
-        switch (log.action) {
-            case 'archive_product':
-                return `Produit ID: ${details.product_id?.slice(0, 8)}...`;
-            case 'delete_user':
-                return `Utilisateur cible: ${details.target_user_id?.slice(0, 8)}...`;
-            case 'edit_product':
-                return `Produit: ${details.name || details.product_id} (Diff: ${details.stock_diff > 0 ? '+' : ''}${details.stock_diff})`;
-            case 'restock_product':
-                return `Produit: ${details.product_id?.slice(0, 8)}... (+${details.added})`;
-            case 'toggle_user_status':
-                return `User: ${details.target_user_id?.slice(0, 8)}... (Statut: ${details.new_status ? 'Actif' : 'Bloqué'})`;
-            default:
-                return JSON.stringify(details);
+
+        // Si c'est déjà une chaîne simple
+        if (typeof details === 'string') return details;
+
+        // Cas spécifiques par type d'action
+        if (log.action.includes('product') || log.action.includes('stock')) {
+            const id = details.product_id || details.id || 'Inconnu';
+            const name = details.name ? ` - ${details.name}` : '';
+            return `📦 Produit ID: ${id.slice(0, 8)}...${name}`;
         }
+
+        if (log.action.includes('user') || log.action.includes('profile')) {
+            const id = details.target_user_id || details.user_id || 'Inconnu';
+            return `👤 Utilisateur cible: ${id.slice(0, 8)}...`;
+        }
+
+        // Nettoyage générique du JSON
+        return JSON.stringify(details)
+            .replace(/[{"}]/g, '') // Supprime les accolades et guillemets
+            .replace(/:/g, ': ')   // Ajoute un espace après les deux-points
+            .replace(/,/g, ' | '); // Remplace les virgules par des séparateurs
+    };
+
+    const getDetailIcon = (action: string) => {
+        if (action.includes('delete')) return <Trash2 size={14} className="text-red-500" />;
+        if (action.includes('archive')) return <Archive size={14} className="text-orange-500" />;
+        if (action.includes('edit')) return <Edit size={14} className="text-blue-500" />;
+        if (action.includes('restock')) return <Plus size={14} className="text-emerald-500" />;
+        if (action.includes('user')) return <User size={14} className="text-purple-500" />;
+        return <Info size={14} className="text-slate-400" />;
     };
 
     const formatActionName = (action: string) => {
@@ -193,9 +209,12 @@ export const ActivityLogs = () => {
                                                 </span>
                                             </td>
                                             <td className="px-8 py-5">
-                                                <p className="text-xs font-bold text-slate-600 dark:text-slate-400 truncate max-w-[200px] group-hover:whitespace-normal group-hover:overflow-visible transition-all">
-                                                    {formatDetails(log)}
-                                                </p>
+                                                <div className="flex items-center gap-2 bg-slate-50 dark:bg-slate-800/40 p-2.5 rounded-xl border border-slate-100 dark:border-slate-800 group-hover:bg-white dark:group-hover:bg-slate-800 transition-all">
+                                                    {getDetailIcon(log.action)}
+                                                    <p className="text-[11px] font-bold text-slate-600 dark:text-slate-300 truncate max-w-[250px] group-hover:whitespace-normal group-hover:overflow-visible transition-all">
+                                                        {formatDetails(log)}
+                                                    </p>
+                                                </div>
                                             </td>
                                         </tr>
                                     ))
