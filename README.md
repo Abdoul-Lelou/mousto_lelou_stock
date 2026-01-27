@@ -1,5 +1,8 @@
 # 🛠️ MOUSTO_LELOU - ERP de Gestion de Quincaillerie
 
+> [!NOTE]
+> Ce projet inclut des scripts de migration automatisés (`supabase/master_db_setup.sql`) pour garantir la scalabilité, la portabilité de l'infrastructure et des sauvegardes de secours fiables.
+
 Solution Full-Stack sécurisée (React/Supabase) pour le suivi de stock et l'analyse décisionnelle.
 
 ## 🚀 Points Forts
